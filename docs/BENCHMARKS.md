@@ -59,8 +59,10 @@ dispatcher does by hand without priorities.
 - The schedulers are heuristics, not optimal solvers.
 - Under heavy load the dispatcher's *average* wait can be higher than FCFS's, because it serves
   trucks FCFS drops. Urgent trucks wait far less and fewer trucks go unserved. The table shows both.
-- Recovery percentage, API latency, Kafka throughput and failure recovery time are measured in
-  later milestones (M5, M7), when the code that produces them exists.
+- Disruption recovery (M5a) is in the "Disruption recovery" section of `RESULTS.md` and
+  `recovery.csv`: 140 trucks, decision at 12:00, seeded late arrivals and two-hour dock outages,
+  comparing how many appointments each strategy moves and whether every plan is valid.
+- API latency, Kafka throughput and failure recovery time are measured in M7.
 
 ## Reproduce
 

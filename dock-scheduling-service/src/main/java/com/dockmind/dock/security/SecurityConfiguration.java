@@ -32,7 +32,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/v1/docks", "/api/v1/schedules/**")
                         .hasAnyRole(Roles.VIEWER, Roles.DISPATCHER, Roles.ADMIN)
                         .requestMatchers(HttpMethod.POST, "/api/v1/docks").hasRole(Roles.ADMIN)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/schedules/*/compute")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/schedules/*/compute", "/api/v1/schedules/*/apply")
                         .hasAnyRole(Roles.DISPATCHER, Roles.ADMIN)
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().denyAll())

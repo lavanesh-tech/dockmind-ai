@@ -535,6 +535,40 @@ whole system locally. Kafka has two listeners: `localhost:9092` for apps on your
 
 ---
 
+## Milestone 5a: Recovering from disruptions
+
+### 5a.1 What a disruption is
+Two kinds: a **late arrival** (a truck now arrives later than planned) and a **dock outage** (a
+dock can't be used for a period). Both happen in the middle of a working day, so some trucks are
+already being loaded. Those appointments are **frozen**: you can't un-start a truck. The only
+exception is a truck whose dock breaks while it is loading; it must be re-planned.
+
+### 5a.2 Two strategies
+- **Minimal change** keeps every appointment the disruption didn't break and only re-plans the
+  rest. Drivers and warehouse staff see few changes.
+- **Full reschedule** re-plans everything not yet started. It can find a better overall
+  schedule, but may move dozens of appointments.
+
+Both plans go through the same independent validator, then are ranked: fewest urgent trucks left
+out, then fewest trucks left out, then fewest moves, then lowest waiting time. The seeded
+recovery benchmark in `docs/benchmarks/RESULTS.md` shows how many appointments each strategy moves.
+
+### 5a.3 The apply gate
+A plan is a whole proposed schedule. `POST /api/v1/schedules/{date}/apply` checks it again here,
+against this service's own data, because the service that saves data must not trust its callers.
+It also carries `baseRunId`, the schedule version it was made from. If someone recomputed the
+schedule meanwhile, the plan is out of date and is rejected with 409: this is **optimistic
+concurrency** at the level of a whole schedule. Big changes (more than 3 moves) need an ADMIN.
+
+### 5a.4 Interview questions for Milestone 5a
+42. Why freeze appointments that have started? What is the one exception?
+43. When would you choose a minimal-change plan over a better full reschedule?
+44. Why re-validate a plan in the service that saves it, if the planner already validated it?
+45. What problem does `baseRunId` solve, and what would happen without it?
+46. Why may a plan only make the problem stricter (later arrivals, more outages)?
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·

@@ -36,11 +36,17 @@ abstract class ListScheduler implements Scheduler {
 
     @Override
     public final Schedule schedule(SchedulingProblem problem) {
-        Timeline timeline = new Timeline(problem);
-        List<Dock> docks = problem.docks().stream().sorted(Comparator.comparing(Dock::id)).toList();
-        List<Job> jobs = problem.jobs().stream().sorted(jobOrder()).toList();
+        return schedule(problem, List.of());
+    }
 
-        List<Assignment> assignments = new ArrayList<>();
+    @Override
+    public final Schedule schedule(SchedulingProblem problem, List<Assignment> fixed) {
+        java.util.Set<String> fixedIds = FixedAppointments.idsOf(problem, fixed);
+        Timeline timeline = new Timeline(problem, fixed);
+        List<Dock> docks = problem.docks().stream().sorted(Comparator.comparing(Dock::id)).toList();
+        List<Job> jobs = problem.jobs().stream().filter(j -> !fixedIds.contains(j.id())).sorted(jobOrder()).toList();
+
+        List<Assignment> assignments = new ArrayList<>(fixed);
         List<Unscheduled> unscheduled = new ArrayList<>();
 
         for (Job job : jobs) {

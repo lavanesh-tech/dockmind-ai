@@ -51,15 +51,22 @@ public final class DispatchScheduler implements Scheduler {
 
     @Override
     public Schedule schedule(SchedulingProblem problem) {
-        Timeline timeline = new Timeline(problem);
+        return schedule(problem, List.of());
+    }
+
+    @Override
+    public Schedule schedule(SchedulingProblem problem, List<Assignment> fixed) {
+        java.util.Set<String> fixedIds = FixedAppointments.idsOf(problem, fixed);
+        Timeline timeline = new Timeline(problem, fixed);
         List<Dock> docks = problem.docks().stream()
                 .sorted(Comparator.comparing(Dock::id)).toList();
 
-        List<Assignment> assignments = new ArrayList<>();
+        List<Assignment> assignments = new ArrayList<>(fixed);
         List<Unscheduled> unscheduled = new ArrayList<>();
 
         Deque<Job> notArrived = new ArrayDeque<>();
-        for (Job job : problem.jobs().stream().sorted(Comparator.comparing(Job::arrival).thenComparing(Job::id)).toList()) {
+        for (Job job : problem.jobs().stream().filter(j -> !fixedIds.contains(j.id()))
+                .sorted(Comparator.comparing(Job::arrival).thenComparing(Job::id)).toList()) {
             if (docks.stream().anyMatch(d -> d.canServe(job))) {
                 notArrived.add(job);
             } else {

@@ -8,7 +8,7 @@ and get a constraint-aware schedule. When a truck is late or a dock goes down, D
 computes feasible recovery plans, explains them, and asks a human to approve significant
 changes. Every decision is recorded in an audit trail.
 
-> **Status:** Milestone 4b (API gateway and resilience). Benchmark results:
+> **Status:** Milestone 5a (disruption recovery planning). Benchmark results:
 > [docs/benchmarks/RESULTS.md](docs/benchmarks/RESULTS.md). See [ROADMAP.md](docs/ROADMAP.md) for
 > what is built and what is next. All data is synthetic, and any benchmark numbers come from
 > seeded simulations, not real customers.

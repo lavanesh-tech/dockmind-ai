@@ -59,9 +59,11 @@ public final class BenchmarkRunner {
         Files.createDirectories(out);
         Files.writeString(out.resolve("results.csv"), toCsv(rows));
         Files.writeString(out.resolve("summary.json"), toJson(rows));
-        Files.writeString(out.resolve("RESULTS.md"), toMarkdown(rows));
+        List<RecoveryBenchmark.Row> recovery = RecoveryBenchmark.run(SEEDS);
+        Files.writeString(out.resolve("recovery.csv"), RecoveryBenchmark.toCsv(recovery));
+        Files.writeString(out.resolve("RESULTS.md"), toMarkdown(rows) + RecoveryBenchmark.toMarkdown(recovery));
         System.out.println("Benchmark written to " + out.toAbsolutePath().normalize());
-        System.out.print(toMarkdown(rows));
+        System.out.print(toMarkdown(rows) + RecoveryBenchmark.toMarkdown(recovery));
     }
 
     public static List<Row> run(int[] loads, long[] seeds) {

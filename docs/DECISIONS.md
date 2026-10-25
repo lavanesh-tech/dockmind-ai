@@ -134,6 +134,22 @@ gateway instances because the counters live in Redis, not in one instance's memo
 Every route has a time limit and a Resilience4j circuit breaker. Callers get a fast, explicit
 503 with a correlation ID instead of hanging. An open circuit gives a failing service room to recover.
 
+## D30. Recovery plans are full schedules, re-checked where they are applied (M5a)
+A recovery plan is a complete proposed schedule. Dock Scheduling validates it again against its
+own data before saving, so no planner (a person, the recovery service or, later, the AI) can save
+a schedule that breaks a rule. Plans carry the schedule version they were made from; if the
+schedule changed since, applying fails with 409 instead of overwriting newer work. Plan overrides
+can only make the problem stricter (a truck later, a dock blocked, an unmeetable deadline dropped).
+
+## D31. Two recovery strategies, minimal change first (M5a)
+Started appointments stay fixed. MINIMAL_CHANGE keeps every unaffected appointment; FULL_RESCHEDULE
+re-plans everything not started. Plans are ranked by urgent trucks left out, then all trucks left
+out, then appointments moved, then waiting time: dispatchers and drivers pay for every change, so
+fewer moves wins ties. Plans moving more than 3 appointments need an ADMIN (configurable).
+
+## D32. M5 shipped in three parts (M5a)
+Engine and apply gate, then the recovery service, then AI, so each change stays reviewable.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.

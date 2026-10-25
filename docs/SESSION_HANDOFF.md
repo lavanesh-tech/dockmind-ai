@@ -13,8 +13,9 @@ For the next Claude conversation: read this, then `docs/PROJECT_CONTEXT.md`, the
   Central, so Claude cannot compile; the developer's Mac can. Docker Desktop must be running for tests.
 - **Stack versions:** Java 21, Spring Boot 4.1.1, Spring Cloud 2025.1.3, PostgreSQL 17,
   Testcontainers 2.x (package `org.testcontainers.postgresql`).
-- **Where we are:** M1 `6894a2e`, M2 `6637873`, M3 `e6c5e1c`, M4a `4744b31` (385 tests) shipped.
-  M4b (api-gateway) code complete, awaiting `ship.sh`. Next: M5 Disruption Recovery + Spring AI.
+- **Where we are:** M1 `6894a2e`, M2 `6637873`, M3 `e6c5e1c`, M4a `4744b31`, M4b `0ebe0f6` (393 tests) shipped.
+  M5a (engine recovery planner, `snapshot`/`apply` in Dock Scheduling) code complete, awaiting
+  `ship.sh`. Next: M5b Disruption Recovery service, then M5c Spring AI.
 - **Confirmed from spring-cloud-dependencies 2025.1.3 on the Mac:** Gateway 5.0.3
   (`spring-cloud-starter-gateway-server-webflux`), CircuitBreaker 5.0.3
   (`spring-cloud-starter-circuitbreaker-reactor-resilience4j`).

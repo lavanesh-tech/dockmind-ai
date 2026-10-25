@@ -35,9 +35,25 @@ final class Timeline {
     private final List<Interval> crewBusy = new ArrayList<>();
 
     Timeline(SchedulingProblem problem) {
+        this(problem, List.of());
+    }
+
+    /**
+     * A timeline that starts with some appointments already fixed (for example trucks already
+     * loading when a disruption happens). Fixed appointments occupy their dock and a crew.
+     */
+    Timeline(SchedulingProblem problem, List<com.dockmind.scheduling.model.Assignment> fixed) {
         this.crewCapacity = problem.crewCapacity();
         for (Dock dock : problem.docks()) {
             dockBusy.put(dock.id(), new ArrayList<>(dock.blocked()));
+        }
+        for (com.dockmind.scheduling.model.Assignment a : fixed) {
+            List<Interval> busy = dockBusy.get(a.dockId());
+            if (busy == null) {
+                throw new IllegalArgumentException("Fixed appointment on unknown dock " + a.dockId());
+            }
+            busy.add(a.slot());
+            crewBusy.add(a.slot());
         }
     }
 

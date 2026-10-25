@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +38,25 @@ public class ScheduleController {
                                     @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                     @Valid @RequestBody ComputeScheduleRequest request) {
         return service.compute(TenantId.of(jwt), date, request.crewCapacity(), jwt.getSubject());
+    }
+
+    @GetMapping("/{date}/snapshot")
+    @Operation(summary = "The current schedule in planner terms",
+            description = "Used by Disruption Recovery. The baseRunId must be sent back when applying a plan.")
+    public ScheduleSnapshot snapshot(@AuthenticationPrincipal Jwt jwt,
+                                     @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return service.snapshot(TenantId.of(jwt), date);
+    }
+
+    @PostMapping("/{date}/apply")
+    @Operation(summary = "Apply a complete proposed schedule (e.g. an approved recovery plan)",
+            description = "Requires DISPATCHER or ADMIN; plans moving more than the threshold need ADMIN. "
+                    + "Re-validated here; 409 if the schedule changed since the plan was made or the plan breaks a rule.")
+    public ScheduleResponse apply(@AuthenticationPrincipal Jwt jwt, Authentication authentication,
+                                  @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                  @Valid @RequestBody ApplyScheduleRequest request) {
+        boolean isAdmin = authentication.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        return service.apply(TenantId.of(jwt), date, request, jwt.getSubject(), isAdmin);
     }
 
     @GetMapping("/{date}")

@@ -2,14 +2,14 @@
 
 Read this first when resuming work. It records the actual current state, not the plan.
 
-_Last updated: 2026-10-25, Milestone 4b (of M1–M8, with M4 in two parts)._
+_Last updated: 2026-10-25, Milestone 5a (of M1–M8; M4 in two parts, M5 in three)._
 
 ## Current state
 
 | Item | State |
 |---|---|
-| Shipped | **M1** `6894a2e` (37 tests) · **M2** `6637873` (336) · **M3** `e6c5e1c` (370) · **M4a** `4744b31` (385: 17 common, 5 common-security, 299 engine, 51 shipment, 13 dock). All pushed and confirmed on `origin/main`, 2026-10-25. |
-| In progress | **M4b gateway and resilience**: code complete, **not yet built**. Verified by the next `ship.sh`. |
+| Shipped | **M1** `6894a2e` (37 tests) · **M2** `6637873` (336) · **M3** `e6c5e1c` (370) · **M4a** `4744b31` (385: 17 common, 5 common-security, 299 engine, 51 shipment, 13 dock) · **M4b** `0ebe0f6` (393). All pushed and confirmed on `origin/main`, 2026-10-25. |
+| In progress | **M5a recovery planning**: engine recovery + Dock Scheduling `snapshot`/`apply`. Engine part compiled and run in the cloud workspace; service part not yet built. Verified by the next `ship.sh`. |
 | Build machine | Developer Mac: JDK 21.0.12 Temurin, Maven 3.10.0 (wrapper), Docker Desktop |
 | Verified metrics | `docs/benchmarks/RESULTS.md` (M2, generated on the Mac build; identical to the cloud run). At 140 trucks/day: dispatcher 0.0 unscheduled vs FCFS 10.4; urgent avg wait 6.7 vs 37.6 min. Dispatcher compute 469 ms at 180 trucks (an optimisation target for M7). |
 
@@ -36,7 +36,8 @@ _Last updated: 2026-10-25, Milestone 4b (of M1–M8, with M4 in two parts)._
 
 ## Known issues and risks
 
-- M4b code hasn't been compiled yet; the first `ship.sh` may surface fixes.
+- M5a service code hasn't been compiled yet; the first `ship.sh` may surface fixes.
+- `apply` re-reads pending shipments; if one was cancelled after the plan was made, its plan line fails validation (409), which is the safe outcome.
 - Dockerfiles and the `app` Compose profile are not exercised by tests; calling `/api/v1` end to end locally needs Keycloak (M6).
 - Published outbox rows are never deleted yet; a retention job is planned for M7.
 - Dock opening hours and schedule days are in UTC; per-warehouse time zones are a later improvement.
@@ -46,5 +47,6 @@ _Last updated: 2026-10-25, Milestone 4b (of M1–M8, with M4 in two parts)._
 
 ## Next steps
 
-1. `./scripts/ship.sh "M4b: API gateway with rate limiting and circuit breakers"`.
-2. Then M5: Disruption Recovery service and Spring AI (needs an OpenAI API key in a local `.env`).
+1. `./scripts/ship.sh "M5a: disruption recovery planning and validated apply"`.
+2. M5b: Disruption Recovery service (own DB, approval, append-only audit).
+3. M5c: AI Operations with Spring AI (needs an OpenAI API key in a local `.env`).
