@@ -207,6 +207,106 @@ what a CI pipeline does, and in M8 Jenkins runs the same checks on every push.
 
 ---
 
+## Milestone 2: Scheduling engine and benchmark
+
+### 2.1 The problem in one paragraph
+Given docks (with capabilities, opening hours and outages), trucks (arrival time, loading time,
+needed capabilities, priority, deadline) and a number of loading crews, choose a dock and a
+start time for every truck so that no rule is broken, and trucks wait as little as possible.
+This is a form of the classic *parallel machine scheduling* problem with release times,
+deadlines, eligibility constraints and a shared resource. It is NP-hard in general, which is why
+practical systems use heuristics.
+
+### 2.2 Modelling with records
+`Interval`, `Dock`, `Job`, `Assignment` and `Schedule` are Java **records**: immutable data with
+`equals`/`hashCode`/`toString` generated. Compact constructors (`public Job { ... }`) validate
+input and make defensive copies (`Set.copyOf`, `List.copyOf`). Immutability matters because the
+same problem is handed to several schedulers; none of them can change it.
+
+**Half-open intervals** `[start, end)`: a truck finishing at 10:00 and another starting at 10:00
+don't overlap. Using closed intervals here is a classic off-by-one bug.
+
+### 2.3 The algorithm: greedy list scheduling
+`ListScheduler.schedule`:
+1. Sort the jobs with a comparator.
+2. For each job, ask the `Timeline` for the earliest feasible start on each compatible dock.
+3. Pick the dock with the lowest score, book it, and move on. If nothing fits, record *why*.
+
+`FcfsScheduler` and `PriorityAwareScheduler` only override the comparator and the score.
+This is the **Template Method** pattern: the loop is fixed, and the decisions are pluggable.
+
+### 2.3b The production algorithm: event-driven dispatch (`DispatchScheduler`)
+A discrete-event simulation of a dispatcher's day:
+1. A clock jumps from event to event: a truck arrives, a booking ends, an outage ends.
+2. At each event, arrived trucks sit in a `TreeSet` ordered by urgency (a priority queue that also
+   supports removal).
+3. While some waiting truck can start *now*, start the most urgent one on the free dock with the
+   fewest unneeded special capabilities.
+4. Trucks whose deadline passes, or that can no longer finish before closing, are reported.
+
+**Why it beat the first design:** `PriorityAwareScheduler` booked urgent trucks across the
+whole day first, which fragmented the timeline. Standard trucks then waited behind slots
+reserved for trucks hours away. The dispatcher only decides among trucks that are actually
+waiting, so it never leaves a dock idle for a future truck. This is the same reason operating
+systems schedule among *ready* processes. Measuring, finding a flaw, and fixing it is a strong
+interview story.
+
+### 2.4 Finding the earliest feasible start (`Timeline`)
+A slot only becomes free when something ends: a booking on the dock, an outage, or another
+dock's booking that was holding a crew. So the candidate start times are "the job's earliest
+time" plus "every end time after it". The scheduler checks them in order (a `TreeSet` keeps them
+sorted and unique) and takes the first that passes every rule. That gives the exact earliest
+start without scanning minute by minute.
+
+**Crew capacity** uses a **sweep line**: turn each interval into a +1 event at its start and a
+−1 event at its end, sort them, and keep a running total. The maximum running total is the peak
+number of crews in use. Ends sort before starts at the same instant, because of half-open intervals.
+
+Complexity: about O(n²) per job and dock in the worst case. Interviewers like hearing that you
+measured it: the benchmark reports the compute time.
+
+### 2.5 Determinism
+The same input must always give the same schedule, otherwise results can't be audited or
+reproduced. How it's achieved:
+- Every comparator ends with the job ID (a *total order*: no ties left to chance).
+- Docks are sorted by ID before use, and a strict `<` keeps the first dock on equal scores.
+- Nothing iterates over a `HashMap` or `HashSet` where order would affect the result.
+- `Random` with a fixed seed is specified to produce the same sequence on every JVM.
+The test `inputOrderNeverChangesTheResult` shuffles jobs and reverses docks, then expects an
+identical schedule.
+
+### 2.6 The independent validator
+`ScheduleValidator` re-checks every rule from scratch, sharing no code with the schedulers.
+*Why duplicate the logic?* If the scheduler and the checker shared a bug, tests would pass while
+schedules were wrong. Independent checking is how safety-critical systems verify outputs. It's
+also how DockMind will keep the AI honest in M5: no plan is accepted unless the validator passes it.
+
+### 2.7 Property-style testing
+`SchedulerPropertyTest` doesn't check one hand-picked example. It generates 40 warehouse days
+(50–370 trucks) and asserts properties that must always hold: zero violations, every job
+accounted for, and input order irrelevant. Example-based tests (`SchedulerRulesTest`) document
+specific rules; property tests catch the cases you didn't think of.
+
+### 2.8 Benchmarking honestly
+- Same seeded workloads for both algorithms; a baseline that isn't sabotaged.
+- Unscheduled trucks reported, not averaged away.
+- Percentiles (p95), not just averages: one 3-hour wait matters more than ten 1-minute ones.
+- Warm-up runs before timing (the JIT compiler speeds code up after it has run a few times).
+- The results are generated by the build, so nobody can type in a nicer number.
+
+### 2.9 Interview questions for Milestone 2
+13. Why are half-open intervals the right choice for bookings?
+14. Walk me through how you find the earliest feasible start. Why are end times sufficient candidates?
+15. How do you guarantee determinism? What would break it?
+16. What is a sweep-line algorithm? Where did you use it?
+17. Why build a separate validator instead of trusting the scheduler's tests?
+18. Your scheduler made standard trucks wait longer in some cases. How would you explain that trade-off to a warehouse manager?
+19. Why a greedy heuristic and not an optimal solver? When would you switch?
+20. Your first design lost to the second. How did you find out, and what did you change?
+21. FCFS shows a lower average wait under heavy load. Why is that misleading?
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·

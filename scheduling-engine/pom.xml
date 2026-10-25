@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.dockmind</groupId>
+        <artifactId>dockmind-ai</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>scheduling-engine</artifactId>
+    <name>DockMind Scheduling Engine</name>
+    <description>
+        Deterministic, framework-free dock scheduling: problem model, feasibility rules,
+        FCFS baseline, priority-aware scheduler, independent validator, metrics and a seeded
+        benchmark. No Spring, no database: pure Java, so it is fast to test and easy to reason about.
+    </description>
+
+    <properties>
+        <!-- `./mvnw verify -DskipBenchmark` skips the benchmark run for a faster build. -->
+        <skipBenchmark>false</skipBenchmark>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+              Runs the seeded benchmark during `verify`, after all tests pass, and writes the
+              results into docs/benchmarks/. The published numbers always come from a real run
+              of the code being committed.
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>run-benchmark</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipBenchmark}</skip>
+                            <mainClass>com.dockmind.scheduling.benchmark.BenchmarkRunner</mainClass>
+                            <arguments>
+                                <argument>${project.basedir}/../docs/benchmarks</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -26,6 +26,7 @@
 
     <modules>
         <module>common</module>
+        <module>scheduling-engine</module>
         <module>shipment-service</module>
     </modules>
 

@@ -2,52 +2,41 @@
 
 Read this first when resuming work. It records the actual current state, not the plan.
 
-_Last updated: 2026-10-25, Milestone 1 of 8._
+_Last updated: 2026-10-25, Milestone 2 of 8._
 
 ## Current state
 
 | Item | State |
 |---|---|
-| Milestone | **M1: Foundation and persistence**, code complete |
-| Last verified build | 2026-10-25 on the developer Mac (JDK 21.0.12 Temurin, Maven 3.10.0): `./mvnw verify` **BUILD SUCCESS**, 21 tests, 0 failures. That build covered the Phase 1 code only. |
-| Not yet verified | Persistence code (JPA, Flyway, Testcontainers tests) and the Spotless formatting gate. Verified by the first `./scripts/ship.sh` run. |
-| Git | Remote `origin` = `https://github.com/lavanesh-tech/dockmind-ai.git`. **No commits yet.** |
-| Verified metrics | None yet (benchmarks start in M2). |
+| Last shipped | **M1 Foundation and persistence**: commit `6894a2ea5635a897da5493d0fb78de9aa57b969f`, pushed and confirmed on `origin/main` on 2026-10-25. 37 tests passed (15 common, 22 shipment-service). |
+| In progress | **M2 Scheduling engine and benchmark**: code complete, **not yet built**. Verified by the next `ship.sh` run. |
+| Build machine | Developer Mac: JDK 21.0.12 Temurin, Maven 3.10.0 (wrapper), Docker Desktop |
+| Verified metrics | None yet. `docs/benchmarks/` is created by the first M2 build. |
 
-## Implemented
+## Modules
 
-| Area | Location |
-|---|---|
-| Root build: Boot 4.1.1, Spring Cloud 2025.1.3 BOM, enforcer, Spotless | `pom.xml` |
-| One-command verify/commit/push | `scripts/ship.sh` |
-| Correlation IDs, RFC 9457 errors | `common/src/main/java/com/dockmind/common/web/` |
-| Shipment domain: entity, enums, tenant-scoped repository | `shipment-service/src/main/java/com/dockmind/shipment/domain/` |
-| Schema | `shipment-service/src/main/resources/db/migration/V1__create_shipment.sql` |
-| Local PostgreSQL | `docker-compose.yml`, `.env.example` |
-| Tests | `common/src/test/...` (unit), `shipment-service/src/test/...` (unit, HTTP integration, Testcontainers repository) |
-
-## Not implemented yet
-
-M2–M8: scheduler and benchmark, REST APIs and security, the other services, gateway, Kafka,
-recovery, Spring AI, Angular, observability, CI/CD and AWS.
+| Module | Purpose | Location |
+|---|---|---|
+| `common` | Correlation IDs, RFC 9457 errors | `common/` |
+| `scheduling-engine` | Model, FCFS + priority-aware schedulers, validator, metrics, seeded benchmark | `scheduling-engine/` |
+| `shipment-service` | Shipment entity, Flyway schema, tenant-scoped repository, health | `shipment-service/` |
 
 ## Commands
 
 ```bash
-./scripts/ship.sh "M1: ..."                     # format, verify, scan secrets, commit, push, confirm
-./mvnw verify                                   # build + all tests (Docker must be running)
-./mvnw spotless:apply                           # fix formatting
-cp .env.example .env && docker compose up -d    # local PostgreSQL for running the app
-./mvnw -pl shipment-service spring-boot:run     # run on :8081 (needs DB_PASSWORD in the environment)
+./scripts/ship.sh "Mx: ..."                       # format, verify, scan, commit, push, confirm
+./mvnw verify                                     # everything (Docker running); also writes docs/benchmarks/
+./mvnw verify -DskipBenchmark                     # faster, skips the benchmark run
+./mvnw -pl scheduling-engine -am verify           # engine + benchmark only
 ```
 
 ## Known issues and risks
 
-- Persistence code has not been through a real build yet; the first `ship.sh` may surface small fixes.
-- Automation limit: the assistant cannot run commands on the developer Mac (computer use can't
-  type into Terminal), so each milestone needs one `ship.sh` run by the developer.
+- M2 code hasn't been compiled yet; the first `ship.sh` may surface small fixes.
+- Scheduler is a greedy heuristic (D15): good and explainable, not optimal.
+- Each milestone needs one `ship.sh` run on the Mac (the assistant can't run commands there).
 
 ## Next steps
 
-1. Run `./scripts/ship.sh "M1: foundation and persistence"` and fix anything it reports.
-2. After it prints `SHIPPED`, start M2: the scheduling engine and the FCFS benchmark.
+1. `./scripts/ship.sh "M2: deterministic scheduling engine and FCFS benchmark"`.
+2. Then M3: REST APIs with OpenAPI, Keycloak OIDC, JWT, roles, tenant isolation tests.

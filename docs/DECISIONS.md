@@ -53,6 +53,30 @@ the schema from entities would hide changes and can't be rolled out safely to pr
 Tests run against the same PostgreSQL version as production, so constraints, `TIMESTAMPTZ`
 and SQL behave the same. H2 would pass tests that fail in production.
 
+## D14. Scheduling engine as a framework-free module (M2)
+No Spring and no database: just problem in, schedule out. This makes it fast to test (hundreds
+of generated scenarios in seconds), deterministic, and reusable by the Dock Scheduling and
+Disruption Recovery services in M4–M5.
+
+## D15. Greedy list scheduling instead of an exact solver (M2)
+Exact optimisation (MILP or constraint programming) gives better schedules but adds a heavy
+dependency and unpredictable run times. A transparent greedy heuristic is easy to explain to
+dispatchers and fast. Both algorithms share the feasibility code, so the benchmark measures only
+the decision rules. An exact solver remains a possible later improvement.
+
+## D15b. Event-driven dispatcher as the production scheduler (M2)
+The first design (priority-first booking across the day) was measured and found to make
+standard trucks wait longer. The dispatcher decides only among arrived trucks and served every
+truck at 80% load. Both designs stay in the benchmark so the evidence is reproducible.
+
+## D16. An independent validator is the source of truth (M2)
+`ScheduleValidator` shares no code with the schedulers. Every published benchmark schedule, and
+from M5 every recovery plan (including anything the AI suggests), must pass it.
+
+## D17. Benchmark results generated during the build (M2)
+`verify` runs the benchmark and writes `docs/benchmarks/`, so the committed numbers always come
+from the committed code. No hand-typed metrics.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.

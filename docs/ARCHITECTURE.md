@@ -64,7 +64,24 @@ This describes the **target** architecture. Phase 1 builds only the `common` lib
 | Resilience | Timeouts on every outbound call, circuit breakers with Resilience4j, bounded retries with backoff (Phase 7–8) |
 | Tracing and metrics | OpenTelemetry, Prometheus, Grafana (Phase 12) |
 
-## 4. Build structure
+## 4. Scheduling engine
+
+`scheduling-engine` is a plain Java library (built in M2), used later by Dock Scheduling and
+Disruption Recovery.
+
+```
+SchedulingProblem (docks, jobs, crews)
+        │
+        ▼
+ Scheduler ── FcfsScheduler (baseline)            ┐ ListScheduler loop
+        │  ├─ PriorityAwareScheduler (iteration) ┘
+        │  └─ DispatchScheduler (production): event-driven
+        │       all share the Timeline feasibility rules
+        ▼
+ Schedule ──▶ ScheduleValidator (independent)  ──▶ ScheduleMetrics ──▶ BenchmarkRunner
+```
+
+## 5. Build structure
 
 A single Maven multi-module repository. Each service is its own module and its own runnable
 jar. `common` holds only infrastructure code, never domain entities, so services stay independent.

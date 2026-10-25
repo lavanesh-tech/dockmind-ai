@@ -8,7 +8,8 @@ and get a constraint-aware schedule. When a truck is late or a dock goes down, D
 computes feasible recovery plans, explains them, and asks a human to approve significant
 changes. Every decision is recorded in an audit trail.
 
-> **Status:** Milestone 1 of 8 (foundation and persistence). See [ROADMAP.md](docs/ROADMAP.md) for
+> **Status:** Milestone 2 of 8 (scheduling engine and benchmark). Benchmark results:
+> [docs/benchmarks/RESULTS.md](docs/benchmarks/RESULTS.md). See [ROADMAP.md](docs/ROADMAP.md) for
 > what is built and what is next. All data is synthetic, and any benchmark numbers come from
 > seeded simulations, not real customers.
 
@@ -33,6 +34,7 @@ test, scans for secrets, commits as the sole author, pushes and confirms GitHub 
 | Path | What it is |
 |---|---|
 | `common/` | Shared web infrastructure: correlation IDs, RFC 9457 error responses |
+| `scheduling-engine/` | Deterministic dock scheduler, FCFS baseline, independent validator, seeded benchmark |
 | `shipment-service/` | Shipments and truck arrivals (skeleton in Phase 1) |
 | `docs/` | Product spec, architecture, roadmap, decisions, learning guide |
 
