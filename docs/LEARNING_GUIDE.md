@@ -307,6 +307,81 @@ specific rules; property tests catch the cases you didn't think of.
 
 ---
 
+## Milestone 3: APIs, security and multi-tenancy
+
+### 3.1 Layers of the shipment service
+`ShipmentController` (HTTP in/out) → `ShipmentService` (use cases, transactions) →
+`Shipment` + `ShipmentRepository` (rules, data). Controllers hold no business logic, and the
+entity holds no HTTP concerns. Separate **DTOs** (`CreateShipmentRequest`, `ShipmentResponse`)
+keep the public contract stable when the database changes, and stop internal fields (like the
+tenant) from leaking out.
+
+### 3.2 REST design choices
+- `POST /api/v1/shipments` returns **201 Created** with a `Location` header.
+- `GET /{id}` returns 200 or 404; the list endpoint requires a bounded `from`/`to` (max 7 days),
+  so a response can't grow without limit.
+- State changes are **commands** (`/arrival`, `/cancel`), not `PATCH status`, so only legal
+  transitions exist.
+- Status codes: 400 for bad input, 401 for no or invalid token, 403 for wrong role, 404 for
+  missing or another tenant's resource, 409 for a conflict (duplicate, illegal transition,
+  concurrent edit).
+- `/api/v1` versioning: breaking changes go to `/v2` while `/v1` keeps working.
+
+### 3.3 Bean Validation
+`@NotBlank`, `@Size`, `@Pattern`, `@Min`/`@Max` and `@NotNull` on the request record, plus a
+cross-field rule as an `@AssertTrue` method. `@Valid` on the controller parameter triggers it,
+and every failure is reported in one 400, not one at a time.
+
+### 3.4 How a request is authenticated (OAuth2 resource server)
+1. The client sends `Authorization: Bearer <JWT>`.
+2. Spring Security verifies the **signature** with the identity provider's public key, then
+   checks **expiry** and **issuer**.
+3. `DockMindJwtConverter` turns the `roles` claims into authorities (`ROLE_DISPATCHER`, ...),
+   ignoring unknown roles.
+4. URL rules in `SecurityConfiguration` allow or deny the request (403 if denied).
+5. The controller reads the tenant from the token with `TenantId.of(jwt)`.
+
+The service never sees a password and keeps no session, because the token is the proof.
+**Stateless** means any instance can handle any request, which is what lets M4 run several
+copies behind a load balancer.
+
+### 3.5 JWT in 60 seconds
+Three base64url parts: header (algorithm), payload (claims: `iss`, `sub`, `exp`,
+`tenant_id`, `roles`) and signature. Anyone can *read* a JWT; only the identity provider can
+*sign* one. RS256 uses a private key to sign and a public key to verify, so services only ever
+hold the public key.
+
+### 3.6 Multi-tenancy, end to end
+- The tenant comes **only** from the signed token.
+- Every repository call is tenant-scoped.
+- Another tenant's shipment returns **404**, so attackers can't probe which IDs exist.
+- A `tenantId` smuggled into the JSON body is ignored. A test proves it.
+
+### 3.7 Why CSRF is disabled here
+CSRF tricks a browser into sending a request with its cookies automatically. This API uses no
+cookies; the bearer token must be added explicitly by code, which a malicious site can't do.
+Disabling CSRF is correct for a stateless token API. It would be wrong for a cookie-session app.
+
+### 3.8 Testing security for real
+`TestTokens` signs real RS256 JWTs. The tests prove:
+- expired, forged-signature, wrong-issuer and missing tokens all return 401, without saying why;
+- a viewer can read but not write, and unknown roles grant nothing;
+- tenant B can't read, cancel or update tenant A's shipments.
+
+Mocking authentication (for example `@WithMockUser`) would skip signature checks entirely, so
+these tests would pass even if verification were broken.
+
+### 3.9 Interview questions for Milestone 3
+22. Walk through what happens between receiving a bearer token and running the controller method.
+23. Why return 404 rather than 403 for another tenant's shipment?
+24. Why is CSRF protection unnecessary for this API, and when would it be required?
+25. What's the difference between authentication and authorization? Where is each in this code?
+26. Why separate DTOs from entities?
+27. Why command endpoints instead of `PATCH status`?
+28. How do you test JWT validation without a real identity provider?
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·

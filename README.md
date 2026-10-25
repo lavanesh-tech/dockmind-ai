@@ -8,7 +8,7 @@ and get a constraint-aware schedule. When a truck is late or a dock goes down, D
 computes feasible recovery plans, explains them, and asks a human to approve significant
 changes. Every decision is recorded in an audit trail.
 
-> **Status:** Milestone 2 of 8 (scheduling engine and benchmark). Benchmark results:
+> **Status:** Milestone 3 of 8 (secured multi-tenant API). Benchmark results:
 > [docs/benchmarks/RESULTS.md](docs/benchmarks/RESULTS.md). See [ROADMAP.md](docs/ROADMAP.md) for
 > what is built and what is next. All data is synthetic, and any benchmark numbers come from
 > seeded simulations, not real customers.
@@ -25,6 +25,9 @@ set -a; source .env; set +a                     # load .env into this shell
 ./mvnw -pl shipment-service spring-boot:run     # start the shipment service on :8081
 curl -i localhost:8081/actuator/health          # {"status":"UP"} plus an X-Correlation-Id header
 ```
+
+API docs: run the service, then open `http://localhost:8081/swagger-ui.html`. Every
+`/api/v1` call needs a bearer token with a `tenant_id` claim and a DockMind role.
 
 To ship a milestone: `./scripts/ship.sh "Mx: description"`. This formats the code, runs every
 test, scans for secrets, commits as the sole author, pushes and confirms GitHub has the commit.

@@ -11,8 +11,25 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+  jackson:
+    deserialization:
+      # Ignore unknown JSON fields (e.g. a "tenantId" a client tries to sneak in) instead of failing.
+      fail-on-unknown-properties: false
   flyway:
     locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Tokens must be signed by this issuer's keys and carry this "iss" claim.
+          # Spring fetches the issuer's public keys lazily, on the first request with a token.
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/dockmind}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
 server:
   port: ${SERVER_PORT:8081}

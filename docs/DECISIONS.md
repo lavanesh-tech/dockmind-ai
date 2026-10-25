@@ -77,6 +77,20 @@ from M5 every recovery plan (including anything the AI suggests), must pass it.
 `verify` runs the benchmark and writes `docs/benchmarks/`, so the committed numbers always come
 from the committed code. No hand-typed metrics.
 
+## D18. Provider-agnostic resource server in M3; Keycloak setup moves to M6 (M3)
+Services validate standard JWTs (signature, expiry, issuer) from any OIDC provider; tests mint
+real RS256 tokens. The Keycloak realm (users, roles, tenant mapper) is first used by a browser
+login in M6, so it is built and verified there instead of shipped untested now. Scope unchanged.
+
+## D19. Tenant from the token only (M3)
+`TenantId.of(jwt)` is the only source of the tenant. Request bodies have no tenant field, and
+unknown JSON fields are ignored, so a client can't target another tenant. Another tenant's
+resources return 404, not 403.
+
+## D20. Command endpoints for state changes (M3)
+`POST /{id}/arrival` and `POST /{id}/cancel` instead of a generic `PATCH status`: each allowed
+transition is explicit, documented and separately securable.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.

@@ -102,6 +102,31 @@ class GlobalExceptionHandlerTest {
         assertThat(problem.getTitle()).isEqualTo("Method Not Allowed");
     }
 
+    @Test
+    void apiExceptionsKeepTheirStatusTypeAndSafeMessage() {
+        ProblemDetail problem = handler.handleApi(ApiException.conflict("Shipment SO-1 already exists"), request);
+
+        assertThat(problem.getStatus()).isEqualTo(409);
+        assertThat(problem.getType()).isEqualTo(URI.create("urn:dockmind:problem:conflict"));
+        assertThat(problem.getTitle()).isEqualTo("Conflict");
+        assertThat(problem.getDetail()).isEqualTo("Shipment SO-1 already exists");
+        assertThat(problem.getProperties()).containsEntry("correlationId", "test-correlation-id");
+    }
+
+    @Test
+    void wrongParameterTypeIsABadRequestNamingOnlyTheParameter() throws Exception {
+        MethodParameter parameter = new MethodParameter(
+                SampleController.class.getDeclaredMethod("create", Object.class), 0);
+        var ex = new org.springframework.web.method.annotation.MethodArgumentTypeMismatchException(
+                "not-a-uuid", java.util.UUID.class, "id", parameter, new IllegalArgumentException("parse error"));
+
+        ProblemDetail problem = handler.handleTypeMismatch(ex, request);
+
+        assertThat(problem.getStatus()).isEqualTo(400);
+        assertThat(problem.getDetail()).isEqualTo("Parameter 'id' has an invalid value.");
+        assertThat(problem.getDetail()).doesNotContain("not-a-uuid", "parse error");
+    }
+
     /** Exists only so the test can build a real MethodParameter. */
     @SuppressWarnings("unused")
     private static final class SampleController {

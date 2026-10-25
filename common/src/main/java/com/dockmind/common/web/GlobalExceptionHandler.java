@@ -13,6 +13,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.net.URI;
 import java.util.List;
@@ -61,6 +62,20 @@ public class GlobalExceptionHandler {
         return baseProblem(HttpStatus.NOT_FOUND, NOT_FOUND_TYPE, "Not found", ex.getMessage(), request);
     }
 
+    /** Errors the application raised deliberately: their message was written to be shown. */
+    @ExceptionHandler(ApiException.class)
+    public ProblemDetail handleApi(ApiException ex, HttpServletRequest request) {
+        ProblemDetail body = ex.getBody();
+        return baseProblem(ex.getStatusCode(), body.getType(), body.getTitle(), body.getDetail(), request);
+    }
+
+    /** A path or query parameter had the wrong type, e.g. "abc" where a UUID or date was expected. */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        return baseProblem(HttpStatus.BAD_REQUEST, VALIDATION_TYPE, "Validation failed",
+                "Parameter '" + ex.getName() + "' has an invalid value.", request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpected(Exception ex, HttpServletRequest request) {
         // Spring's own framework errors (unknown URL -> 404, wrong HTTP method -> 405,
@@ -78,8 +93,12 @@ public class GlobalExceptionHandler {
                 "Internal error", "An unexpected error occurred.", request);
     }
 
-    private static ProblemDetail baseProblem(HttpStatusCode status, URI type, String title,
-                                             String detail, HttpServletRequest request) {
+    /**
+     * Builds the standard DockMind problem response. Public so service-specific advice
+     * (for example mapping database conflicts) produces exactly the same shape.
+     */
+    public static ProblemDetail baseProblem(HttpStatusCode status, URI type, String title,
+                                            String detail, HttpServletRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setType(type);
         problem.setTitle(title);

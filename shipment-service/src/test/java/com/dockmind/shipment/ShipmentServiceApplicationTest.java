@@ -1,6 +1,8 @@
 package com.dockmind.shipment;
 
 import com.dockmind.common.web.CorrelationId;
+import com.dockmind.shipment.security.TestSecurityConfiguration;
+import com.dockmind.shipment.security.TestTokens;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * embedded Tomcat, actuator, and the shared correlation ID filter.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, TestSecurityConfiguration.class})
 class ShipmentServiceApplicationTest {
 
     private final HttpClient http = HttpClient.newBuilder()
@@ -47,13 +49,15 @@ class ShipmentServiceApplicationTest {
 
     @Test
     void sensitiveActuatorEndpointsAreNotExposed() throws Exception {
-        assertThat(get("/actuator/env", null).statusCode()).isEqualTo(404);
-        assertThat(get("/actuator/beans", null).statusCode()).isEqualTo(404);
+        // Not exposed over HTTP at all, and also behind authentication: either way, never readable.
+        assertThat(get("/actuator/env", null).statusCode()).isIn(401, 404);
+        assertThat(get("/actuator/beans", null).statusCode()).isIn(401, 404);
     }
 
     @Test
     void unknownUrlReturnsProblemDetail404() throws Exception {
-        HttpResponse<String> response = get("/api/v1/does-not-exist", "probe-404");
+        HttpResponse<String> response = get("/api/v1/does-not-exist", "probe-404",
+                TestTokens.token("tenant-a", "VIEWER"));
 
         assertThat(response.statusCode()).isEqualTo(404);
         assertThat(response.headers().firstValue("Content-Type")).hasValueSatisfying(
@@ -77,11 +81,19 @@ class ShipmentServiceApplicationTest {
     }
 
     private HttpResponse<String> get(String path, String correlationId) throws IOException, InterruptedException {
+        return get(path, correlationId, null);
+    }
+
+    private HttpResponse<String> get(String path, String correlationId, String bearerToken)
+            throws IOException, InterruptedException {
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
                 .timeout(Duration.ofSeconds(5))
                 .GET();
         if (correlationId != null) {
             builder.header(CorrelationId.HEADER, correlationId);
+        }
+        if (bearerToken != null) {
+            builder.header("Authorization", "Bearer " + bearerToken);
         }
         return http.send(builder.build(), HttpResponse.BodyHandlers.ofString());
     }
