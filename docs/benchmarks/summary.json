@@ -2,14 +2,14 @@
   "seeds": [1, 2, 3, 4, 5],
   "javaVersion": "21.0.12.1",
   "summary": [
-    {"load": 100, "algorithm": "FCFS", "runs": 5, "avgWaitMin": 17.23, "p95WaitMin": 52.25, "urgentAvgWaitMin": 15.19, "unscheduled": 0.80, "urgentUnscheduled": 0.80, "dockUtilization": 0.4240, "computeMs": 1.296},
-    {"load": 100, "algorithm": "PRIORITY_AWARE", "runs": 5, "avgWaitMin": 20.03, "p95WaitMin": 66.80, "urgentAvgWaitMin": 0.00, "unscheduled": 0.00, "urgentUnscheduled": 0.00, "dockUtilization": 0.4275, "computeMs": 1.521},
-    {"load": 100, "algorithm": "DOCKMIND_DISPATCH", "runs": 5, "avgWaitMin": 14.82, "p95WaitMin": 51.75, "urgentAvgWaitMin": 4.52, "unscheduled": 0.20, "urgentUnscheduled": 0.20, "dockUtilization": 0.4261, "computeMs": 8.082},
-    {"load": 140, "algorithm": "FCFS", "runs": 5, "avgWaitMin": 54.67, "p95WaitMin": 112.60, "urgentAvgWaitMin": 37.56, "unscheduled": 10.40, "urgentUnscheduled": 10.40, "dockUtilization": 0.5505, "computeMs": 2.484},
-    {"load": 140, "algorithm": "PRIORITY_AWARE", "runs": 5, "avgWaitMin": 82.83, "p95WaitMin": 188.75, "urgentAvgWaitMin": 0.37, "unscheduled": 1.00, "urgentUnscheduled": 0.00, "dockUtilization": 0.5920, "computeMs": 3.116},
-    {"load": 140, "algorithm": "DOCKMIND_DISPATCH", "runs": 5, "avgWaitMin": 75.89, "p95WaitMin": 174.55, "urgentAvgWaitMin": 6.71, "unscheduled": 0.00, "urgentUnscheduled": 0.00, "dockUtilization": 0.5971, "computeMs": 117.158},
-    {"load": 180, "algorithm": "FCFS", "runs": 5, "avgWaitMin": 111.68, "p95WaitMin": 203.85, "urgentAvgWaitMin": 36.64, "unscheduled": 23.20, "urgentUnscheduled": 22.20, "dockUtilization": 0.6615, "computeMs": 6.536},
-    {"load": 180, "algorithm": "PRIORITY_AWARE", "runs": 5, "avgWaitMin": 122.72, "p95WaitMin": 237.65, "urgentAvgWaitMin": 0.94, "unscheduled": 22.60, "urgentUnscheduled": 0.00, "dockUtilization": 0.6645, "computeMs": 5.770},
-    {"load": 180, "algorithm": "DOCKMIND_DISPATCH", "runs": 5, "avgWaitMin": 120.31, "p95WaitMin": 235.35, "urgentAvgWaitMin": 7.46, "unscheduled": 18.60, "urgentUnscheduled": 0.00, "dockUtilization": 0.6845, "computeMs": 450.163}
+    {"load": 100, "algorithm": "FCFS", "runs": 5, "avgWaitMin": 17.23, "p95WaitMin": 52.25, "urgentAvgWaitMin": 15.19, "unscheduled": 0.80, "urgentUnscheduled": 0.80, "dockUtilization": 0.4240, "computeMs": 1.036},
+    {"load": 100, "algorithm": "PRIORITY_AWARE", "runs": 5, "avgWaitMin": 20.03, "p95WaitMin": 66.80, "urgentAvgWaitMin": 0.00, "unscheduled": 0.00, "urgentUnscheduled": 0.00, "dockUtilization": 0.4275, "computeMs": 1.294},
+    {"load": 100, "algorithm": "DOCKMIND_DISPATCH", "runs": 5, "avgWaitMin": 14.82, "p95WaitMin": 51.75, "urgentAvgWaitMin": 4.52, "unscheduled": 0.20, "urgentUnscheduled": 0.20, "dockUtilization": 0.4261, "computeMs": 9.331},
+    {"load": 140, "algorithm": "FCFS", "runs": 5, "avgWaitMin": 54.67, "p95WaitMin": 112.60, "urgentAvgWaitMin": 37.56, "unscheduled": 10.40, "urgentUnscheduled": 10.40, "dockUtilization": 0.5505, "computeMs": 2.777},
+    {"load": 140, "algorithm": "PRIORITY_AWARE", "runs": 5, "avgWaitMin": 82.83, "p95WaitMin": 188.75, "urgentAvgWaitMin": 0.37, "unscheduled": 1.00, "urgentUnscheduled": 0.00, "dockUtilization": 0.5920, "computeMs": 3.420},
+    {"load": 140, "algorithm": "DOCKMIND_DISPATCH", "runs": 5, "avgWaitMin": 75.89, "p95WaitMin": 174.55, "urgentAvgWaitMin": 6.71, "unscheduled": 0.00, "urgentUnscheduled": 0.00, "dockUtilization": 0.5971, "computeMs": 139.189},
+    {"load": 180, "algorithm": "FCFS", "runs": 5, "avgWaitMin": 111.68, "p95WaitMin": 203.85, "urgentAvgWaitMin": 36.64, "unscheduled": 23.20, "urgentUnscheduled": 22.20, "dockUtilization": 0.6615, "computeMs": 7.565},
+    {"load": 180, "algorithm": "PRIORITY_AWARE", "runs": 5, "avgWaitMin": 122.72, "p95WaitMin": 237.65, "urgentAvgWaitMin": 0.94, "unscheduled": 22.60, "urgentUnscheduled": 0.00, "dockUtilization": 0.6645, "computeMs": 6.539},
+    {"load": 180, "algorithm": "DOCKMIND_DISPATCH", "runs": 5, "avgWaitMin": 120.31, "p95WaitMin": 235.35, "urgentAvgWaitMin": 7.46, "unscheduled": 18.60, "urgentUnscheduled": 0.00, "dockUtilization": 0.6845, "computeMs": 521.901}
   ]
 }

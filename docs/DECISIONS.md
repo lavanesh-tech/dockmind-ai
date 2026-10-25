@@ -150,6 +150,22 @@ fewer moves wins ties. Plans moving more than 3 appointments need an ADMIN (conf
 ## D32. M5 shipped in three parts (M5a)
 Engine and apply gate, then the recovery service, then AI, so each change stays reviewable.
 
+## D33. Recovery calls Dock Scheduling with the user's own token (M5b)
+The recovery service relays the caller's JWT instead of using a service account, so Dock
+Scheduling applies the caller's tenant and role. A compromised or buggy recovery service can do
+no more than the person using it. Machine-to-machine credentials come with Keycloak in M6 if needed.
+
+## D34. No remote calls inside database transactions (M5b)
+Snapshots are fetched and plans applied outside transactions; results are saved in short
+transactions afterwards. A slow dependency then can't hold database connections. Optimistic
+locking on the disruption makes concurrent approvals safe; a plan that Dock Scheduling rejects
+as stale closes the disruption as FAILED, with the reason in the audit trail.
+
+## D35. The audit trail is append-only in the database itself (M5b)
+`audit_entry` has triggers that reject UPDATE, DELETE and TRUNCATE, the entity is `@Immutable`,
+and the repository has no update or delete methods. History can't be rewritten by a bug or by
+anyone using the application's database credentials.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.

@@ -32,7 +32,7 @@ outbox → Kafka), `dock-scheduling-service` (docks, events → read model, sche
 | API Gateway | nothing | Single entry point: routing, token validation, rate limits |
 | Shipment | shipments, truck arrivals | Booking, arrival updates, late-arrival detection |
 | Dock Scheduling | warehouses, docks, appointments | Deterministic scheduling and conflict validation |
-| Disruption Recovery | disruptions, recovery plans, approvals | Plan generation, comparison, human approval |
+| Disruption Recovery | disruptions, recovery plans, append-only audit trail | Plan generation and comparison, human approval; applies plans only through Dock Scheduling's validated `apply` (token relayed, timeout, circuit breaker) |
 | AI Operations | conversation logs only | Explains plans using authorized read-only tools |
 
 ## 2. Rules

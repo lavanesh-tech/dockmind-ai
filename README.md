@@ -8,7 +8,7 @@ and get a constraint-aware schedule. When a truck is late or a dock goes down, D
 computes feasible recovery plans, explains them, and asks a human to approve significant
 changes. Every decision is recorded in an audit trail.
 
-> **Status:** Milestone 5a (disruption recovery planning). Benchmark results:
+> **Status:** Milestone 5b (Disruption Recovery service). Benchmark results:
 > [docs/benchmarks/RESULTS.md](docs/benchmarks/RESULTS.md). See [ROADMAP.md](docs/ROADMAP.md) for
 > what is built and what is next. All data is synthetic, and any benchmark numbers come from
 > seeded simulations, not real customers.
@@ -40,6 +40,7 @@ test, scans for secrets, commits as the sole author, pushes and confirms GitHub 
 | `common-security/` | JWT roles, tenant from token, 401/403 problem JSON |
 | `scheduling-engine/` | Deterministic dock scheduler, FCFS baseline, independent validator, seeded benchmark |
 | `dock-scheduling-service/` | Docks, shipment read model from Kafka events, validated schedules (:8082) |
+| `disruption-recovery-service/` | Disruptions, compared recovery plans, human approval, append-only audit (:8083) |
 | `test-support/` | Signed test JWTs and Testcontainers (test scope only) |
 | `shipment-service/` | Shipments REST API and transactional outbox to Kafka (:8081) |
 | `api-gateway/` | Single entry point (:8080): routing, edge auth, per-tenant rate limits, circuit breakers |

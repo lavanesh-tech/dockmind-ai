@@ -31,6 +31,7 @@
         <module>test-support</module>
         <module>shipment-service</module>
         <module>dock-scheduling-service</module>
+        <module>disruption-recovery-service</module>
         <module>api-gateway</module>
     </modules>
 

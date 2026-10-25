@@ -569,6 +569,40 @@ concurrency** at the level of a whole schedule. Big changes (more than 3 moves) 
 
 ---
 
+## Milestone 5b: The Disruption Recovery service
+
+### 5b.1 The workflow
+1. A dispatcher reports a disruption: `POST /api/v1/disruptions`.
+2. The service fetches the current schedule from Dock Scheduling, runs the planner and stores
+   every valid plan with its numbers (moved, unscheduled, waiting). **Nothing changes yet.**
+3. A person compares the plans and approves one (`/approve`) or rejects them all (`/reject`).
+   Plans moving more than 3 appointments need an ADMIN.
+4. On approval the plan is sent to Dock Scheduling's `apply`, which checks everything again.
+
+This is **human in the loop**: software proposes, a person decides, and the decision is recorded.
+
+### 5b.2 Calling another service safely
+- **Token relay:** the user's own JWT is forwarded, so the other service enforces that user's
+  tenant and role. The recovery service can't do more than the person using it.
+- **Timeouts:** 2 s to connect, 5 s to answer. Without them one hung call holds a thread forever.
+- **Circuit breaker:** if most recent calls failed, stop calling for 30 s and answer 503
+  immediately. Only real failures count (5xx, timeouts); a 404 or 409 is a normal answer.
+- **No remote call inside a database transaction:** otherwise a slow dependency also holds a
+  database connection, and a few slow calls can exhaust the pool.
+
+### 5b.3 An audit trail you can trust
+The `audit_entry` table has database triggers that refuse UPDATE, DELETE and TRUNCATE. Even code
+with the app's database password can only add history, never rewrite it. A test proves it.
+
+### 5b.4 Interview questions for Milestone 5b
+47. Token relay vs. a service account: what are the trade-offs?
+48. Why should a 409 from a dependency not open the circuit breaker?
+49. Why avoid remote calls inside a database transaction? What can go wrong?
+50. How do you make an audit log tamper-resistant? What can still defeat your approach?
+51. Two people approve different plans at the same moment. What happens here, and why?
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·
