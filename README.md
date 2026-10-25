@@ -1,0 +1,46 @@
+# DockMind AI
+
+A multi-tenant warehouse dock scheduling and disruption recovery platform, built in Java 21
+and Spring Boot 4.
+
+Logistics operators register warehouses and loading docks, book shipments and truck arrivals,
+and get a constraint-aware schedule. When a truck is late or a dock goes down, DockMind
+computes feasible recovery plans, explains them, and asks a human to approve significant
+changes. Every decision is recorded in an audit trail.
+
+> **Status:** Milestone 1 of 8 (foundation and persistence). See [ROADMAP.md](docs/ROADMAP.md) for
+> what is built and what is next. All data is synthetic, and any benchmark numbers come from
+> seeded simulations, not real customers.
+
+## Quick start
+
+Requirements: JDK 21+, Maven 3.9+ (or the included wrapper), Docker Desktop (from Phase 2).
+
+```bash
+./mvnw verify                                   # build and run all tests (Docker must be running)
+cp .env.example .env                            # set DB_PASSWORD in .env
+docker compose up -d                            # local PostgreSQL
+set -a; source .env; set +a                     # load .env into this shell
+./mvnw -pl shipment-service spring-boot:run     # start the shipment service on :8081
+curl -i localhost:8081/actuator/health          # {"status":"UP"} plus an X-Correlation-Id header
+```
+
+To ship a milestone: `./scripts/ship.sh "Mx: description"`. This formats the code, runs every
+test, scans for secrets, commits as the sole author, pushes and confirms GitHub has the commit.
+
+## Repository layout
+
+| Path | What it is |
+|---|---|
+| `common/` | Shared web infrastructure: correlation IDs, RFC 9457 error responses |
+| `shipment-service/` | Shipments and truck arrivals (skeleton in Phase 1) |
+| `docs/` | Product spec, architecture, roadmap, decisions, learning guide |
+
+## Documentation
+
+- [Product spec](docs/PRODUCT_SPEC.md): what DockMind does and for whom
+- [Architecture](docs/ARCHITECTURE.md): services, data ownership, events
+- [Roadmap](docs/ROADMAP.md): the 13 phases and their acceptance criteria
+- [Decisions](docs/DECISIONS.md): why things are built the way they are
+- [Project context](docs/PROJECT_CONTEXT.md): current state and next steps
+- [Learning guide](docs/LEARNING_GUIDE.md): beginner-friendly explanations and interview questions

@@ -1,0 +1,24 @@
+# Local infrastructure for running DockMind on your machine.
+#   cp .env.example .env    # then set a password in .env (never commit .env)
+#   docker compose up -d
+# Tests do not need this: they start their own throwaway database with Testcontainers.
+
+services:
+  shipment-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: shipment
+      POSTGRES_USER: ${DB_USERNAME:-dockmind}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5432:5432"   # only reachable from this machine
+    volumes:
+      - shipment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d shipment"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  shipment-db-data:
