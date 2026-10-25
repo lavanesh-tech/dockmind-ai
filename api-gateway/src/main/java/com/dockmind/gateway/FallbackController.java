@@ -17,7 +17,8 @@ import java.util.Set;
 @RestController
 public class FallbackController {
 
-    private static final Set<String> KNOWN = Set.of(RoutesConfiguration.SHIPMENT, RoutesConfiguration.DOCK);
+    private static final Set<String> KNOWN = Set.of(RoutesConfiguration.SHIPMENT, RoutesConfiguration.DOCK,
+            RoutesConfiguration.RECOVERY, RoutesConfiguration.AI);
 
     @RequestMapping("/fallback/{service}")
     public ProblemDetail unavailable(@PathVariable String service, ServerWebExchange exchange) {

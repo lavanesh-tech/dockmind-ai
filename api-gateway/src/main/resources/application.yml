@@ -18,8 +18,12 @@ dockmind:
   gateway:
     shipment-uri: ${SHIPMENT_SERVICE_URI:http://localhost:8081}
     dock-uri: ${DOCK_SERVICE_URI:http://localhost:8082}
+    recovery-uri: ${RECOVERY_SERVICE_URI:http://localhost:8083}
+    ai-uri: ${AI_SERVICE_URI:http://localhost:8084}
     # Longest a caller waits for a backend before getting a 503.
     timeout: ${GATEWAY_TIMEOUT:3s}
+    # Recovery planning and AI answers can take longer (an LLM reply can take tens of seconds).
+    long-timeout: ${GATEWAY_LONG_TIMEOUT:60s}
     rate-limit:
       # Token bucket per tenant: refills this many requests per second, allows bursts up to burst-capacity.
       replenish-rate: ${RATE_LIMIT_PER_SECOND:20}

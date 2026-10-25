@@ -7,7 +7,7 @@
 # It stops at the first problem and changes nothing on GitHub unless every check passes:
 #   1. tools present (JDK 21+, Docker running, git identity correct)
 #   2. code formatted (Spotless)
-#   3. full build + unit + integration tests (./mvnw verify)
+#   3. full build + unit + integration tests (./mvnw verify), then the web app's build and tests
 #   4. no secrets in the changes about to be committed
 #   5. commit authored only by the expected identity, no co-author trailers
 #   6. push, then confirm GitHub's main points at the same commit
@@ -31,6 +31,7 @@ fail() { printf '\n\033[31mSTOPPED: %s\033[0m\n' "$*" >&2; exit 1; }
 
 step "1/6 Checking tools"
 java -version 2>&1 | head -1
+command -v node >/dev/null || fail "Node.js is not installed (https://nodejs.org)."
 docker info >/dev/null 2>&1 || fail "Docker is not running. Open Docker Desktop, wait until it says 'running', then run this again."
 [[ "$(git config user.name)" == "$EXPECTED_NAME" ]]   || fail "git user.name is '$(git config user.name)', expected '$EXPECTED_NAME'."
 [[ "$(git config user.email)" == "$EXPECTED_EMAIL" ]] || fail "git user.email is '$(git config user.email)', expected '$EXPECTED_EMAIL'."
@@ -48,6 +49,12 @@ fi
 echo
 echo "Test summary:"
 grep -E "^\[INFO\] Tests run: [0-9]+, Failures" "$LOG" | grep -v " -- in " || true
+
+echo
+echo "Web app: install, build and unit tests"
+if ! (cd frontend && npm ci --no-audit --no-fund --loglevel=error && npm run build && npm test) 2>&1 | tee -a "$LOG" | tail -15; then
+  fail "Web app build or tests failed. Copy everything above this line and paste it to Claude."
+fi
 
 step "4/6 Scanning changes for secrets"
 git add -A

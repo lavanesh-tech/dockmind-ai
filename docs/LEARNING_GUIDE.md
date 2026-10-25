@@ -632,6 +632,37 @@ repeatable, and can simulate a misbehaving model on purpose.
 
 ---
 
+## Milestone 6: Login and the web app
+
+### 6.1 How login works (OIDC authorization code + PKCE)
+1. You click Sign in; the app sends you to Keycloak with a random *code challenge*.
+2. You type your password **on Keycloak's page**, never in DockMind's app.
+3. Keycloak redirects back with a one-time *code*; the app exchanges it, plus the secret
+   *code verifier* only it knows, for tokens. A stolen code is useless without the verifier.
+4. The app sends the access token (a signed JWT with your tenant and roles) to `/api`. Every
+   service checks the signature, expiry and issuer itself.
+
+The browser client is *public* (no secret: a browser can't keep one) and can't do password logins.
+
+### 6.2 Multi-tenancy in the token
+Each user has an admin-only `tenant_id` attribute that Keycloak puts in the token. Users can't
+edit it (a test proves it). The services take the tenant only from the token, so a user of one
+company can never see another's data, whatever the UI sends.
+
+### 6.3 The UI hides, the server decides
+The app hides buttons your role can't use, but that's convenience, not security. Every rule is
+enforced again by the services.
+
+### 6.4 Interview questions for Milestone 6
+56. Why PKCE? What attack does it stop?
+57. Why must the browser client be public, and what does that imply?
+58. Where should access tokens live in a browser app, and what are the trade-offs?
+59. Why is hiding a button not access control?
+60. Your tokens say `iss=http://localhost:8180` but containers reach Keycloak at `keycloak:8080`.
+    How do the services validate them?
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·

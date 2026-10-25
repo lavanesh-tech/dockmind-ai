@@ -178,6 +178,23 @@ role. A tool the model asks for but doesn't have is refused (422) and nothing is
 system prompt also says "read-only", but safety doesn't depend on the model obeying it: tests
 script a prompt-injected model that tries to approve a plan and prove no request but GETs is sent.
 
+## D38. Keycloak realm as code, verified by a test (M6; supersedes the D9 proposal)
+`keycloak/realm-dockmind.json` defines roles, the `tenant_id` claim (an admin-only user attribute,
+so users can't change their own tenant), a public browser client (code flow + PKCE S256, no
+password grant) and demo users. Passwords and the smoke-test client secret are `${ENV}` placeholders
+filled from `.env`, so no credentials are in Git. `KeycloakRealmTest` boots the real Keycloak with
+this file on every build and checks the tokens against DockMind's own security code.
+
+## D39. Browser talks only to the gateway, through a same-origin /api proxy (M6)
+The Angular dev server proxies `/api` to the gateway, so there is no CORS to configure and the
+access token is attached only to `/api/` requests, never to other sites. Containers validate
+tokens with issuer `localhost:8180` (what the browser sees) and fetch keys over the Docker network.
+
+## D40. Angular 22, Material and Tailwind utilities; the web app is part of ship.sh (M6)
+Angular 22 supports the developer's Node 26. Tailwind is used for layout utilities only (no reset)
+so it doesn't fight Material's styles. `ship.sh` builds and unit-tests the web app; the Playwright
+end-to-end workflow test needs the whole system running, so it is `run-local.sh e2e`.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.

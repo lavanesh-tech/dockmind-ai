@@ -1,7 +1,7 @@
 # Local infrastructure for running DockMind on your machine.
 #   cp .env.example .env    # then set a password in .env (never commit .env)
 #   docker compose up -d                      # infrastructure only: databases, Kafka, Redis
-#   ./mvnw package -DskipTests && docker compose --profile app up -d --build   # plus the three services
+#   ./scripts/run-local.sh                    # everything: builds, starts all services, Keycloak and the web app
 # Tests do not need this: they start their own throwaway containers with Testcontainers.
 # Each service owns its own database; nothing is shared between them.
 
@@ -54,6 +54,23 @@ services:
       timeout: 3s
       retries: 10
 
+  # Login (OpenID Connect). Imports the DockMind realm: roles, tenant claim, demo users.
+  # Admin console: http://localhost:8180 (KC_ADMIN_PASSWORD from .env). Dev mode: local use only.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.1
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_HOSTNAME: http://localhost:8180
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?Set KC_ADMIN_PASSWORD in .env}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:?Set DEMO_USER_PASSWORD in .env}
+      DOCKMIND_SMOKE_CLIENT_SECRET: ${DOCKMIND_SMOKE_CLIENT_SECRET:?Set DOCKMIND_SMOKE_CLIENT_SECRET in .env}
+    volumes:
+      - ./keycloak/realm-dockmind.json:/opt/keycloak/data/import/realm-dockmind.json:ro
+    ports:
+      - "127.0.0.1:8180:8080"
+
   # Single-node Kafka in KRaft mode (no ZooKeeper). Fine for local development only.
   kafka:
     image: apache/kafka:4.1.0
@@ -92,6 +109,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:19092
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
+      # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
     depends_on:
       shipment-db: { condition: service_healthy }
       kafka: { condition: service_started }
@@ -107,6 +126,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:19092
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
+      # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
     depends_on:
       dock-db: { condition: service_healthy }
       kafka: { condition: service_started }
@@ -122,6 +143,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       DOCK_SERVICE_URI: http://dock-scheduling-service:8082
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
+      # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
     depends_on:
       recovery-db: { condition: service_healthy }
       dock-scheduling-service: { condition: service_started }
@@ -137,6 +160,8 @@ services:
       DOCK_SERVICE_URI: http://dock-scheduling-service:8082
       RECOVERY_SERVICE_URI: http://disruption-recovery-service:8083
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
+      # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
     depends_on:
       - dock-scheduling-service
       - disruption-recovery-service
@@ -149,10 +174,15 @@ services:
     environment:
       SHIPMENT_SERVICE_URI: http://shipment-service:8081
       DOCK_SERVICE_URI: http://dock-scheduling-service:8082
+      RECOVERY_SERVICE_URI: http://disruption-recovery-service:8083
+      AI_SERVICE_URI: http://ai-operations-service:8084
       REDIS_HOST: redis
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
+      # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
     depends_on:
       - redis
+      - keycloak
       - shipment-service
       - dock-scheduling-service
     ports:

@@ -28,6 +28,8 @@ public class RoutesConfiguration {
 
     public static final String SHIPMENT = "shipment-service";
     public static final String DOCK = "dock-scheduling-service";
+    public static final String RECOVERY = "disruption-recovery-service";
+    public static final String AI = "ai-operations-service";
 
     @Bean
     RouteLocator routes(RouteLocatorBuilder builder, GatewayProperties props, RedisRateLimiter limiter,
@@ -43,6 +45,16 @@ public class RoutesConfiguration {
                                 .requestRateLimiter(c -> c.setRateLimiter(limiter).setKeyResolver(tenantKeyResolver))
                                 .circuitBreaker(c -> c.setName(DOCK).setFallbackUri("forward:/fallback/" + DOCK)))
                         .uri(props.dockUri()))
+                .route(RECOVERY, r -> r.path("/api/v1/disruptions", "/api/v1/disruptions/**")
+                        .filters(f -> f
+                                .requestRateLimiter(c -> c.setRateLimiter(limiter).setKeyResolver(tenantKeyResolver))
+                                .circuitBreaker(c -> c.setName(RECOVERY).setFallbackUri("forward:/fallback/" + RECOVERY)))
+                        .uri(props.recoveryUri()))
+                .route(AI, r -> r.path("/api/v1/assistant/**")
+                        .filters(f -> f
+                                .requestRateLimiter(c -> c.setRateLimiter(limiter).setKeyResolver(tenantKeyResolver))
+                                .circuitBreaker(c -> c.setName(AI).setFallbackUri("forward:/fallback/" + AI)))
+                        .uri(props.aiUri()))
                 .build();
     }
 

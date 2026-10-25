@@ -44,7 +44,10 @@ class GatewayTest {
     static void routes(DynamicPropertyRegistry registry) {
         registry.add("dockmind.gateway.shipment-uri", SHIPMENTS::uri);
         registry.add("dockmind.gateway.dock-uri", () -> "http://127.0.0.1:1"); // nothing listens: always down
+        registry.add("dockmind.gateway.recovery-uri", SHIPMENTS::uri);
+        registry.add("dockmind.gateway.ai-uri", SHIPMENTS::uri);
         registry.add("dockmind.gateway.timeout", () -> "1s");
+        registry.add("dockmind.gateway.long-timeout", () -> "5s");
         registry.add("dockmind.gateway.rate-limit.replenish-rate", () -> "1");
         registry.add("dockmind.gateway.rate-limit.burst-capacity", () -> "3");
     }
@@ -90,6 +93,14 @@ class GatewayTest {
         assertThat(response.body()).contains("\"path\":\"/api/v1/shipments/abc\"", "\"authForwarded\":true",
                 "\"correlationId\":\"gw-corr-1\"");
         assertThat(response.headers().firstValue("X-Correlation-Id")).hasValue("gw-corr-1");
+    }
+
+    @Test
+    void routesDisruptionAndAssistantPathsToTheirServices() {
+        String token = TestTokens.token(newTenant(), "VIEWER");
+
+        assertThat(get("/api/v1/disruptions", token, null).body()).contains("\"path\":\"/api/v1/disruptions\"");
+        assertThat(get("/api/v1/assistant/ask", token, null).body()).contains("\"path\":\"/api/v1/assistant/ask\"");
     }
 
     @Test

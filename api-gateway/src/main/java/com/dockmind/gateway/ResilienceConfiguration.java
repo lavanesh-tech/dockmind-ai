@@ -27,7 +27,9 @@ public class ResilienceConfiguration {
     @Bean
     Customizer<ReactiveResilience4JCircuitBreakerFactory> defaultCircuitBreaker(GatewayProperties props) {
         return factory -> factory.configureDefault(id -> new Resilience4JConfigBuilder(id)
-                .timeLimiterConfig(TimeLimiterConfig.custom().timeoutDuration(props.timeout()).build())
+                .timeLimiterConfig(TimeLimiterConfig.custom().timeoutDuration(
+                        RoutesConfiguration.RECOVERY.equals(id) || RoutesConfiguration.AI.equals(id)
+                                ? props.longTimeout() : props.timeout()).build())
                 .circuitBreakerConfig(CircuitBreakerConfig.custom()
                         .slidingWindowSize(20)
                         .minimumNumberOfCalls(10)

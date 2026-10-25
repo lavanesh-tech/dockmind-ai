@@ -8,22 +8,21 @@ and get a constraint-aware schedule. When a truck is late or a dock goes down, D
 computes feasible recovery plans, explains them, and asks a human to approve significant
 changes. Every decision is recorded in an audit trail.
 
-> **Status:** Milestone 5c (AI Operations with Spring AI). Benchmark results:
+> **Status:** Milestone 6 (login and web app). Benchmark results:
 > [docs/benchmarks/RESULTS.md](docs/benchmarks/RESULTS.md). See [ROADMAP.md](docs/ROADMAP.md) for
 > what is built and what is next. All data is synthetic, and any benchmark numbers come from
 > seeded simulations, not real customers.
 
 ## Quick start
 
-Requirements: JDK 21+, Maven 3.9+ (or the included wrapper), Docker Desktop (from Phase 2).
+Requirements: JDK 21+, Node.js 22.22+/24/26, Docker Desktop.
 
 ```bash
-./mvnw verify                                   # build and run all tests (Docker must be running)
-cp .env.example .env                            # set DB_PASSWORD in .env
-docker compose up -d                            # local PostgreSQL ×2, Kafka and Redis
-set -a; source .env; set +a                     # load .env into this shell
-./mvnw -pl shipment-service spring-boot:run     # start the shipment service on :8081
-curl -i localhost:8081/actuator/health          # {"status":"UP"} plus an X-Correlation-Id header
+./scripts/run-local.sh       # builds, starts every service, Keycloak and the web app
+# open http://localhost:4200 and sign in as admin.acme, dispatcher.acme, viewer.acme or dispatcher.globex
+# (password: DEMO_USER_PASSWORD in .env, generated on first run)
+./scripts/run-local.sh stop  # stop everything
+./mvnw verify                # all backend tests (Docker must be running)
 ```
 
 API docs: run the service, then open `http://localhost:8081/swagger-ui.html`. Every
@@ -45,6 +44,8 @@ test, scans for secrets, commits as the sole author, pushes and confirms GitHub 
 | `test-support/` | Signed test JWTs and Testcontainers (test scope only) |
 | `shipment-service/` | Shipments REST API and transactional outbox to Kafka (:8081) |
 | `api-gateway/` | Single entry point (:8080): routing, edge auth, per-tenant rate limits, circuit breakers |
+| `frontend/` | Angular 22 web app (Material + Tailwind), OIDC login with PKCE (:4200) |
+| `keycloak/` | Keycloak realm as code: roles, tenant claim, demo users |
 | `docs/` | Product spec, architecture, roadmap, decisions, learning guide |
 
 ## Documentation

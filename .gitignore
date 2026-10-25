@@ -27,9 +27,12 @@ application-local.yml
 *.log
 logs/
 
-# Frontend (added in a later phase)
+# Frontend
 node_modules/
 dist/
+.angular/
+test-results/
+playwright-report/
 
 # Claude Code local settings
 .claude/settings.local.json

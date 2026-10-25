@@ -14,7 +14,10 @@ For the next Claude conversation: read this, then `docs/PROJECT_CONTEXT.md`, the
 - **Stack versions:** Java 21, Spring Boot 4.1.1, Spring Cloud 2025.1.3, PostgreSQL 17,
   Testcontainers 2.x (package `org.testcontainers.postgresql`).
 - **Where we are:** M1 `6894a2e`, M2 `6637873`, M3 `e6c5e1c`, M4a `4744b31`, M4b `0ebe0f6`, M5a `c96c83d`, M5b `3356005` (424 tests) shipped.
-  M5c (ai-operations-service, :8084, Spring AI 2.0.2) code complete, awaiting `ship.sh`. Next: M6.
+  M5c `ea14625` (433 tests) shipped. M6 (Keycloak 26.6.1 realm, gateway routes for recovery
+  and AI, Angular 22 app in `frontend/`, `scripts/run-local.sh`) code complete, awaiting `ship.sh`.
+- **Cloud workspace can:** run npm (registry allowed), build/test the Angular app, download and run
+  Keycloak from GitHub releases, drive Chromium with Playwright. It still can't reach Maven Central.
 - **Spring AI facts checked in the v2.0.2 source:** starter `spring-ai-starter-model-openai`, BOM
   `org.springframework.ai:spring-ai-bom`; `spring.ai.model.chat=none` disables the OpenAI chat model;
   tools need the model's options to be `ToolCallingChatOptions`; unknown tool → `IllegalStateException`
