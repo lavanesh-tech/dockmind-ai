@@ -26,8 +26,11 @@
 
     <modules>
         <module>common</module>
+        <module>common-security</module>
         <module>scheduling-engine</module>
+        <module>test-support</module>
         <module>shipment-service</module>
+        <module>dock-scheduling-service</module>
     </modules>
 
     <properties>
@@ -49,6 +52,21 @@
             <dependency>
                 <groupId>com.dockmind</groupId>
                 <artifactId>dockmind-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dockmind</groupId>
+                <artifactId>dockmind-common-security</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dockmind</groupId>
+                <artifactId>scheduling-engine</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.dockmind</groupId>
+                <artifactId>dockmind-test-support</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

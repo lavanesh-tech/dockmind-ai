@@ -1,4 +1,4 @@
-package com.dockmind.shipment.security;
+package com.dockmind.common.security;
 
 import com.dockmind.common.web.CorrelationId;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +19,7 @@ import java.io.IOException;
  * never says <i>why</i> a token was rejected (expired, bad signature, wrong issuer), which
  * would help an attacker. The reason is logged by Spring Security at debug level.
  */
-final class ProblemJsonSecurityHandlers implements AuthenticationEntryPoint, AccessDeniedHandler {
+public final class ProblemJsonSecurityHandlers implements AuthenticationEntryPoint, AccessDeniedHandler {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,

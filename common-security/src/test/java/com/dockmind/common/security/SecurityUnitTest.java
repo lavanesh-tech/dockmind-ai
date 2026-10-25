@@ -1,4 +1,4 @@
-package com.dockmind.shipment.security;
+package com.dockmind.common.security;
 
 import com.dockmind.common.web.ApiException;
 import org.junit.jupiter.api.Test;

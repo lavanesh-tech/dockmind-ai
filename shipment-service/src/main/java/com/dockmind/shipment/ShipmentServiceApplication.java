@@ -4,6 +4,7 @@ import com.dockmind.common.web.CommonWebConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Entry point for the Shipment Service.
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Import;
  */
 @SpringBootApplication
 @Import(CommonWebConfiguration.class)
+@EnableScheduling // runs the outbox relay
 public class ShipmentServiceApplication {
 
     public static void main(String[] args) {

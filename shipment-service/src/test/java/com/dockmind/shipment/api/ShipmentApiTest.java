@@ -2,7 +2,7 @@ package com.dockmind.shipment.api;
 
 import com.dockmind.shipment.TestcontainersConfiguration;
 import com.dockmind.shipment.domain.ShipmentRepository;
-import com.dockmind.shipment.security.TestSecurityConfiguration;
+import com.dockmind.testsupport.TestSecurityConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,12 +13,12 @@ import org.springframework.context.annotation.Import;
 
 import java.net.http.HttpResponse;
 
-import static com.dockmind.shipment.security.TestTokens.expiredToken;
-import static com.dockmind.shipment.security.TestTokens.forgedToken;
-import static com.dockmind.shipment.security.TestTokens.keycloakStyleToken;
-import static com.dockmind.shipment.security.TestTokens.token;
-import static com.dockmind.shipment.security.TestTokens.tokenFromWrongIssuer;
-import static com.dockmind.shipment.security.TestTokens.tokenWithoutTenant;
+import static com.dockmind.testsupport.TestTokens.expiredToken;
+import static com.dockmind.testsupport.TestTokens.forgedToken;
+import static com.dockmind.testsupport.TestTokens.keycloakStyleToken;
+import static com.dockmind.testsupport.TestTokens.token;
+import static com.dockmind.testsupport.TestTokens.tokenFromWrongIssuer;
+import static com.dockmind.testsupport.TestTokens.tokenWithoutTenant;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**

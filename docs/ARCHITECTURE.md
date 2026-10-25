@@ -1,7 +1,8 @@
 # DockMind AI: Architecture
 
-This describes the **target** architecture. Phase 1 builds only the `common` library and a
-`shipment-service` skeleton. Each later phase adds a piece, as listed in the [roadmap](ROADMAP.md).
+This describes the **target** architecture. **Built so far (M4a):** `shipment-service` (REST,
+outbox → Kafka), `dock-scheduling-service` (docks, events → read model, schedules), and the shared
+`common`, `common-security` and `scheduling-engine` modules. Event contracts: [EVENTS.md](EVENTS.md).
 
 ## 1. Services
 

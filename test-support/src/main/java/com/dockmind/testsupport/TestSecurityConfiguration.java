@@ -1,4 +1,4 @@
-package com.dockmind.shipment.security;
+package com.dockmind.testsupport;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;

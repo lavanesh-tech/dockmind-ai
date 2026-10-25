@@ -13,8 +13,10 @@ For the next Claude conversation: read this, then `docs/PROJECT_CONTEXT.md`, the
   Central, so Claude cannot compile; the developer's Mac can. Docker Desktop must be running for tests.
 - **Stack versions:** Java 21, Spring Boot 4.1.1, Spring Cloud 2025.1.3, PostgreSQL 17,
   Testcontainers 2.x (package `org.testcontainers.postgresql`).
-- **Where we are:** M1 shipped (`6894a2e`), M2 shipped (`6637873`, 336 tests). M3 (secured
-  multi-tenant API) code complete, awaiting `ship.sh`. Next: M4 microservices, gateway, Kafka.
+- **Where we are:** M1 `6894a2e`, M2 `6637873`, M3 `e6c5e1c` (370 tests) shipped. M4a (outbox,
+  Kafka, dock-scheduling-service) code complete, awaiting `ship.sh`. Next: M4b gateway + resilience.
+- **Confirmed from Boot 4.1.1's BOM on the Mac:** `spring-boot-starter-kafka` (Spring Kafka 4.1.1,
+  Kafka 4.2.1), `spring-boot-starter-data-redis-reactive`, Testcontainers 2.0.5, Awaitility 4.3.0.
 - **Versions confirmed:** `spring-boot-starter-security-oauth2-resource-server` (the Boot 4 name),
   springdoc-openapi 3.1.1 (built for Boot 4.1). Keycloak setup is scheduled for M6 (D18).
 - **Key design rules so far:** `common` holds no domain code; every query is tenant-scoped;

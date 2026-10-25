@@ -6,14 +6,14 @@ Synthetic workloads only (see [BENCHMARKS.md](../BENCHMARKS.md) for the model an
 
 | Trucks/day | Algorithm | Avg wait (min) | p95 wait (min) | Urgent avg wait (min) | Unscheduled | Urgent unscheduled | Dock utilization | Compute (ms) |
 |---|---|---|---|---|---|---|---|---|
-| 100 | FCFS | 17.2 | 52.3 | 15.2 | 0.8 | 0.8 | 42.4% | 1.1 |
-| 100 | PRIORITY_AWARE | 20.0 | 66.8 | 0.0 | 0.0 | 0.0 | 42.7% | 1.5 |
-| 100 | DOCKMIND_DISPATCH | 14.8 | 51.8 | 4.5 | 0.2 | 0.2 | 42.6% | 11.1 |
-| 140 | FCFS | 54.7 | 112.6 | 37.6 | 10.4 | 10.4 | 55.0% | 3.6 |
-| 140 | PRIORITY_AWARE | 82.8 | 188.8 | 0.4 | 1.0 | 0.0 | 59.2% | 4.4 |
-| 140 | DOCKMIND_DISPATCH | 75.9 | 174.6 | 6.7 | 0.0 | 0.0 | 59.7% | 166.9 |
-| 180 | FCFS | 111.7 | 203.9 | 36.6 | 23.2 | 22.2 | 66.2% | 9.6 |
-| 180 | PRIORITY_AWARE | 122.7 | 237.7 | 0.9 | 22.6 | 0.0 | 66.4% | 8.1 |
-| 180 | DOCKMIND_DISPATCH | 120.3 | 235.4 | 7.5 | 18.6 | 0.0 | 68.4% | 621.8 |
+| 100 | FCFS | 17.2 | 52.3 | 15.2 | 0.8 | 0.8 | 42.4% | 1.4 |
+| 100 | PRIORITY_AWARE | 20.0 | 66.8 | 0.0 | 0.0 | 0.0 | 42.7% | 1.8 |
+| 100 | DOCKMIND_DISPATCH | 14.8 | 51.8 | 4.5 | 0.2 | 0.2 | 42.6% | 9.2 |
+| 140 | FCFS | 54.7 | 112.6 | 37.6 | 10.4 | 10.4 | 55.0% | 3.0 |
+| 140 | PRIORITY_AWARE | 82.8 | 188.8 | 0.4 | 1.0 | 0.0 | 59.2% | 3.6 |
+| 140 | DOCKMIND_DISPATCH | 75.9 | 174.6 | 6.7 | 0.0 | 0.0 | 59.7% | 133.9 |
+| 180 | FCFS | 111.7 | 203.9 | 36.6 | 23.2 | 22.2 | 66.2% | 8.0 |
+| 180 | PRIORITY_AWARE | 122.7 | 237.7 | 0.9 | 22.6 | 0.0 | 66.4% | 6.8 |
+| 180 | DOCKMIND_DISPATCH | 120.3 | 235.4 | 7.5 | 18.6 | 0.0 | 68.4% | 512.4 |
 
 All 45 schedules passed the independent validator with 0 violations.

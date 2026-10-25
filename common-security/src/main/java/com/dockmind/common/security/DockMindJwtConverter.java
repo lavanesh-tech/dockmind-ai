@@ -1,4 +1,4 @@
-package com.dockmind.shipment.security;
+package com.dockmind.common.security;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

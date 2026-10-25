@@ -12,12 +12,12 @@
 
     <artifactId>shipment-service</artifactId>
     <name>DockMind Shipment Service</name>
-    <description>Owns shipments and truck arrivals. Phase 1: runnable skeleton with health and readiness probes.</description>
+    <description>Owns shipments and truck arrivals: secured REST API, PostgreSQL, and a transactional outbox that publishes shipment events to Kafka.</description>
 
     <dependencies>
         <dependency>
             <groupId>com.dockmind</groupId>
-            <artifactId>dockmind-common</artifactId>
+            <artifactId>dockmind-common-security</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -32,10 +32,10 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- Validates JWT access tokens issued by any standard OIDC provider (Keycloak locally, from M6). -->
+        <!-- Events go out through a transactional outbox to Kafka (M4). -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
         </dependency>
         <!-- OpenAPI document at /v3/api-docs and Swagger UI at /swagger-ui.html. 3.1.x targets Spring Boot 4.1. -->
         <dependency>
@@ -67,8 +67,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
+            <groupId>com.dockmind</groupId>
+            <artifactId>dockmind-test-support</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Runs a real PostgreSQL in Docker for tests, so tests use the same database as production. -->

@@ -91,6 +91,31 @@ resources return 404, not 403.
 `POST /{id}/arrival` and `POST /{id}/cancel` instead of a generic `PATCH status`: each allowed
 transition is explicit, documented and separately securable.
 
+## D21. Transactional outbox for every published event (M4a)
+Writing to the database and to Kafka in one step can't be atomic: one can succeed while the
+other fails. Writing the event row in the same database transaction, then relaying it, makes
+"change happened" and "event will be published" the same fact. The relay uses
+`FOR UPDATE SKIP LOCKED`, so several instances can run it safely. Delivery is at least once.
+
+## D22. Read model instead of synchronous calls (M4a)
+Dock Scheduling keeps its own `shipment_view` built from events instead of calling the
+shipment service at scheduling time. If the shipment service is down, scheduling still works,
+and there are no cross-service joins. The cost is eventual consistency: a just-booked shipment
+appears in scheduling a moment later.
+
+## D23. Idempotent, stale-safe consumers with a dead-letter topic (M4a)
+Deduplicate by `eventId` (processed-event table, same transaction as the update); ignore events
+older than the view's last applied event; 3 bounded retries for transient errors; permanent
+errors straight to `shipment-events.DLT`. One poison message never blocks the partition.
+
+## D24. M4 shipped in two parts; Disruption Recovery service built with its logic in M5 (M4a)
+Smaller reviewable changes, as the brief requires. The Disruption Recovery service is created in
+M5 together with the recovery logic it exists for, rather than as an empty skeleton now.
+
+## D25. Shared security code in `common-security`, test helpers in `test-support` (M4a)
+Both services read identity the same way, so that code lives in one module. URL rules stay
+per service. Test-only code (signed test JWTs, containers) is a test-scoped module that never ships.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.

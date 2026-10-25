@@ -2,7 +2,7 @@ package com.dockmind.shipment.api;
 
 import com.dockmind.shipment.application.ShipmentService;
 import com.dockmind.shipment.domain.Shipment;
-import com.dockmind.shipment.security.TenantId;
+import com.dockmind.common.security.TenantId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

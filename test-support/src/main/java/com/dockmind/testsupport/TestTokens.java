@@ -1,5 +1,6 @@
-package com.dockmind.shipment.security;
+package com.dockmind.testsupport;
 
+import com.dockmind.common.security.TenantId;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;

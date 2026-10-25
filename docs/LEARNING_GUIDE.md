@@ -382,6 +382,95 @@ these tests would pass even if verification were broken.
 
 ---
 
+## Milestone 4a: Events, the outbox and a second service
+
+### 4.1 Why a second service, and why it has its own database
+Dock Scheduling owns docks and schedules; Shipment owns shipments. Each has its own PostgreSQL
+database, and neither can query the other's. This is the core rule of microservices: if two
+services share tables, a change to one breaks the other, and they can't be deployed independently.
+
+### 4.2 How Dock Scheduling learns about shipments: events and a read model
+Shipment publishes **facts** ("ShipmentBooked", "ShipmentArrived", "ShipmentCancelled") to Kafka.
+Dock Scheduling consumes them and keeps its own `shipment_view` table with just the fields
+scheduling needs. Scheduling then reads only local data, so it keeps working even if the
+shipment service is down. The trade-off is **eventual consistency**: a new booking shows up in
+scheduling a fraction of a second later. See [EVENTS.md](EVENTS.md).
+
+### 4.3 The dual-write problem and the transactional outbox
+Naive code: `save(shipment); kafka.send(event);`. If the app crashes between the two, the
+shipment exists but no event was ever sent, so other services never learn about it. Reversing the
+order can publish an event for a change that then rolls back.
+
+The fix is the outbox:
+1. Save the shipment **and** an `outbox_event` row in **one** database transaction.
+2. A separate relay reads unpublished rows, sends them to Kafka, and marks them published.
+
+Now "the change happened" and "the event will be sent" are the same commit. `Propagation.MANDATORY`
+on the recorder makes it impossible to call outside a transaction.
+
+**Relay details worth explaining in an interview:**
+- `SELECT ... FOR UPDATE SKIP LOCKED` lets several instances run the relay without sending the
+  same row at the same time or waiting on each other.
+- It stops a batch at the first failure, so a later event for a shipment never overtakes an earlier one.
+- Kafka key = shipment ID, so all events for one shipment land on one partition, in order.
+- The guarantee is **at least once**: a crash after Kafka accepts but before the row is marked
+  causes a resend. That's why consumers must be idempotent.
+
+### 4.4 Idempotent consumer
+Each event has a unique `eventId`. In one transaction, the consumer:
+1. checks the `processed_event` table and skips the event if it's already there;
+2. records the ID;
+3. updates the view.
+
+A redelivered event changes nothing. Two consumers racing on the same event? One insert hits
+the primary key and fails, the retry then sees the row and skips.
+
+### 4.5 Out-of-order events
+Events can arrive late (retries, redeliveries). The view remembers `last_event_at`; an older
+event is recorded as processed but not applied, so a late "Booked" can't undo a "Cancelled".
+
+### 4.6 Retries and dead letters
+- **Transient** errors (database blip): 3 retries with exponential backoff (200 → 400 → 800 ms).
+  Bounded, so one message can't block its partition forever.
+- **Permanent** errors (bad JSON, unknown `eventVersion`, missing fields): no retries.
+- Both end on `shipment-events.DLT` with the error in the headers, for an operator to inspect
+  and replay. Processing continues with the next message.
+
+### 4.7 Event versioning
+Every event carries `eventVersion`. Adding a field is backward compatible (consumers ignore
+unknown fields); renaming or removing one is a new version, which old consumers reject to the DLT
+instead of misreading.
+
+### 4.8 Computing a schedule
+`ScheduleService.compute`:
+1. Load the tenant's docks and the day's pending shipments from local tables.
+2. Map them to the engine's `SchedulingProblem` (arrived trucks are available from their
+   actual arrival; late trucks lose their deadline).
+3. Run `DispatchScheduler`.
+4. Run `ScheduleValidator`. **If there's any violation, refuse to save.**
+5. Save a new `ScheduleRun`, never overwriting earlier ones, so the history is the audit trail.
+
+### 4.9 Testing distributed behaviour
+Tests run a real Kafka broker in Docker (Testcontainers). They prove:
+- an HTTP booking produces the event on the topic, with the correlation ID header;
+- a rejected request writes no event;
+- duplicates and stale events change nothing;
+- poison messages land on the DLT.
+
+**Awaitility** (`await().atMost(...)`) waits for asynchronous results without fixed `sleep`s,
+which would be slow and flaky.
+
+### 4.10 Interview questions for Milestone 4a
+29. What is the dual-write problem? How does the outbox solve it?
+30. Why is delivery "at least once", and how do you still get exactly-once *processing*?
+31. What does `FOR UPDATE SKIP LOCKED` do, and why does the relay need it?
+32. How do you keep events for one shipment in order in Kafka?
+33. What's a dead-letter topic? Which errors go there immediately, and which after retries?
+34. Read model vs synchronous REST call between services: trade-offs?
+35. How do you evolve an event schema without breaking consumers?
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·

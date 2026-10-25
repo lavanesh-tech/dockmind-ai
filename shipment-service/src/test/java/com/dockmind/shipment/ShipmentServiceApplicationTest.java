@@ -1,8 +1,8 @@
 package com.dockmind.shipment;
 
 import com.dockmind.common.web.CorrelationId;
-import com.dockmind.shipment.security.TestSecurityConfiguration;
-import com.dockmind.shipment.security.TestTokens;
+import com.dockmind.testsupport.TestSecurityConfiguration;
+import com.dockmind.testsupport.TestTokens;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;

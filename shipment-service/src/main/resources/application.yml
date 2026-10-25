@@ -17,6 +17,17 @@ spring:
       fail-on-unknown-properties: false
   flyway:
     locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      # Wait for all in-sync replicas, and let the broker drop duplicate retries (idempotent producer).
+      acks: all
+      properties:
+        enable.idempotence: true
+        # Fail fast when Kafka is down, so the relay retries later instead of hanging.
+        max.block.ms: 5000
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 10000
   security:
     oauth2:
       resourceserver:

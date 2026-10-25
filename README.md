@@ -8,7 +8,7 @@ and get a constraint-aware schedule. When a truck is late or a dock goes down, D
 computes feasible recovery plans, explains them, and asks a human to approve significant
 changes. Every decision is recorded in an audit trail.
 
-> **Status:** Milestone 3 of 8 (secured multi-tenant API). Benchmark results:
+> **Status:** Milestone 4a (events and the Dock Scheduling service). Benchmark results:
 > [docs/benchmarks/RESULTS.md](docs/benchmarks/RESULTS.md). See [ROADMAP.md](docs/ROADMAP.md) for
 > what is built and what is next. All data is synthetic, and any benchmark numbers come from
 > seeded simulations, not real customers.
@@ -20,7 +20,7 @@ Requirements: JDK 21+, Maven 3.9+ (or the included wrapper), Docker Desktop (fro
 ```bash
 ./mvnw verify                                   # build and run all tests (Docker must be running)
 cp .env.example .env                            # set DB_PASSWORD in .env
-docker compose up -d                            # local PostgreSQL
+docker compose up -d                            # local PostgreSQL ×2 and Kafka
 set -a; source .env; set +a                     # load .env into this shell
 ./mvnw -pl shipment-service spring-boot:run     # start the shipment service on :8081
 curl -i localhost:8081/actuator/health          # {"status":"UP"} plus an X-Correlation-Id header
@@ -37,8 +37,11 @@ test, scans for secrets, commits as the sole author, pushes and confirms GitHub 
 | Path | What it is |
 |---|---|
 | `common/` | Shared web infrastructure: correlation IDs, RFC 9457 error responses |
+| `common-security/` | JWT roles, tenant from token, 401/403 problem JSON |
 | `scheduling-engine/` | Deterministic dock scheduler, FCFS baseline, independent validator, seeded benchmark |
-| `shipment-service/` | Shipments and truck arrivals (skeleton in Phase 1) |
+| `dock-scheduling-service/` | Docks, shipment read model from Kafka events, validated schedules (:8082) |
+| `test-support/` | Signed test JWTs and Testcontainers (test scope only) |
+| `shipment-service/` | Shipments REST API and transactional outbox to Kafka (:8081) |
 | `docs/` | Product spec, architecture, roadmap, decisions, learning guide |
 
 ## Documentation

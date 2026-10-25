@@ -1,4 +1,4 @@
-package com.dockmind.shipment.security;
+package com.dockmind.common.security;
 
 import java.util.Set;
 

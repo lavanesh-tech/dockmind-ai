@@ -5,6 +5,8 @@ import com.dockmind.common.web.ResourceNotFoundException;
 import com.dockmind.shipment.api.CreateShipmentRequest;
 import com.dockmind.shipment.domain.Shipment;
 import com.dockmind.shipment.domain.ShipmentRepository;
+import com.dockmind.shipment.events.ShipmentEventRecorder;
+import com.dockmind.shipment.events.ShipmentEvents;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +30,11 @@ public class ShipmentService {
     public static final Duration MAX_LIST_RANGE = Duration.ofDays(7);
 
     private final ShipmentRepository repository;
+    private final ShipmentEventRecorder events;
 
-    public ShipmentService(ShipmentRepository repository) {
+    public ShipmentService(ShipmentRepository repository, ShipmentEventRecorder events) {
         this.repository = repository;
+        this.events = events;
     }
 
     public Shipment book(String tenantId, CreateShipmentRequest request) {
@@ -44,7 +48,9 @@ public class ShipmentService {
         } catch (IllegalArgumentException e) {
             throw ApiException.badRequest(e.getMessage()); // entity rules; messages are written to be safe
         }
-        return repository.saveAndFlush(shipment);
+        Shipment saved = repository.saveAndFlush(shipment);
+        events.record(saved, ShipmentEvents.BOOKED); // same transaction: both commit or neither does
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -72,7 +78,9 @@ public class ShipmentService {
         } catch (IllegalStateException e) {
             throw ApiException.conflict(e.getMessage());
         }
-        return repository.saveAndFlush(shipment); // flush now so the response shows the new version
+        Shipment saved = repository.saveAndFlush(shipment); // flush now so the response shows the new version
+        events.record(saved, ShipmentEvents.ARRIVED);
+        return saved;
     }
 
     public Shipment cancel(String tenantId, UUID id) {
@@ -82,6 +90,8 @@ public class ShipmentService {
         } catch (IllegalStateException e) {
             throw ApiException.conflict(e.getMessage());
         }
-        return repository.saveAndFlush(shipment);
+        Shipment saved = repository.saveAndFlush(shipment);
+        events.record(saved, ShipmentEvents.CANCELLED);
+        return saved;
     }
 }
