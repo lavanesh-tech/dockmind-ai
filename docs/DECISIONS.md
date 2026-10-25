@@ -116,6 +116,24 @@ M5 together with the recovery logic it exists for, rather than as an empty skele
 Both services read identity the same way, so that code lives in one module. URL rules stay
 per service. Test-only code (signed test JWTs, containers) is a test-scoped module that never ships.
 
+## D26. Reactive (WebFlux) gateway (M4b)
+A gateway mostly waits on other services. Non-blocking I/O means a slow backend holds no thread,
+so one struggling service can't exhaust the gateway. The services stay on Spring MVC, which is
+simpler to write and debug for request/response business logic.
+
+## D27. Validate tokens at the edge and again in each service (M4b)
+The gateway rejects bad tokens before they cost backend work; services still validate because
+they must never trust that traffic came through the gateway (defence in depth). Role rules live
+only in the services, next to the endpoints they protect.
+
+## D28. Rate limit per tenant, in Redis (M4b)
+A token bucket keyed by the tenant claim: limits are fair between companies, and shared across
+gateway instances because the counters live in Redis, not in one instance's memory.
+
+## D29. Timeouts and circuit breakers return 503 problem JSON (M4b)
+Every route has a time limit and a Resilience4j circuit breaker. Callers get a fast, explicit
+503 with a correlation ID instead of hanging. An open circuit gives a failing service room to recover.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.

@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/dockmind}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+dockmind:
+  gateway:
+    shipment-uri: ${SHIPMENT_SERVICE_URI:http://localhost:8081}
+    dock-uri: ${DOCK_SERVICE_URI:http://localhost:8082}
+    # Longest a caller waits for a backend before getting a 503.
+    timeout: ${GATEWAY_TIMEOUT:3s}
+    rate-limit:
+      # Token bucket per tenant: refills this many requests per second, allows bursts up to burst-capacity.
+      replenish-rate: ${RATE_LIMIT_PER_SECOND:20}
+      burst-capacity: ${RATE_LIMIT_BURST:40}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:-}]"

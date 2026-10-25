@@ -8,7 +8,7 @@ and get a constraint-aware schedule. When a truck is late or a dock goes down, D
 computes feasible recovery plans, explains them, and asks a human to approve significant
 changes. Every decision is recorded in an audit trail.
 
-> **Status:** Milestone 4a (events and the Dock Scheduling service). Benchmark results:
+> **Status:** Milestone 4b (API gateway and resilience). Benchmark results:
 > [docs/benchmarks/RESULTS.md](docs/benchmarks/RESULTS.md). See [ROADMAP.md](docs/ROADMAP.md) for
 > what is built and what is next. All data is synthetic, and any benchmark numbers come from
 > seeded simulations, not real customers.
@@ -20,7 +20,7 @@ Requirements: JDK 21+, Maven 3.9+ (or the included wrapper), Docker Desktop (fro
 ```bash
 ./mvnw verify                                   # build and run all tests (Docker must be running)
 cp .env.example .env                            # set DB_PASSWORD in .env
-docker compose up -d                            # local PostgreSQL ×2 and Kafka
+docker compose up -d                            # local PostgreSQL ×2, Kafka and Redis
 set -a; source .env; set +a                     # load .env into this shell
 ./mvnw -pl shipment-service spring-boot:run     # start the shipment service on :8081
 curl -i localhost:8081/actuator/health          # {"status":"UP"} plus an X-Correlation-Id header
@@ -42,6 +42,7 @@ test, scans for secrets, commits as the sole author, pushes and confirms GitHub 
 | `dock-scheduling-service/` | Docks, shipment read model from Kafka events, validated schedules (:8082) |
 | `test-support/` | Signed test JWTs and Testcontainers (test scope only) |
 | `shipment-service/` | Shipments REST API and transactional outbox to Kafka (:8081) |
+| `api-gateway/` | Single entry point (:8080): routing, edge auth, per-tenant rate limits, circuit breakers |
 | `docs/` | Product spec, architecture, roadmap, decisions, learning guide |
 
 ## Documentation

@@ -471,6 +471,70 @@ which would be slow and flaky.
 
 ---
 
+## Milestone 4b: The API gateway
+
+### 4.11 What a gateway is for
+Clients talk to **one** address (`:8080`), not to every service. The gateway:
+- routes `/api/v1/shipments/**` to the shipment service and docks/schedules to dock scheduling;
+- rejects bad tokens at the edge;
+- rate-limits each tenant;
+- shields callers from slow or broken services.
+
+Services stay focused on business logic.
+
+### 4.12 Reactive vs servlet
+The gateway uses **WebFlux** (non-blocking). In a servlet app, each waiting request holds a
+thread; if a backend becomes slow, threads run out and the whole gateway stalls. Reactive code
+waits without holding a thread, so thousands of slow calls cost little. The services stay on
+Spring MVC, which is easier to read and debug for business logic. Choosing per component, not
+dogmatically, is the point.
+
+### 4.13 Rate limiting: the token bucket
+Each tenant has a bucket of tokens (here: refills 20 per second, holds up to 40). A request takes
+one token; an empty bucket means **429 Too Many Requests**. The burst capacity allows short spikes;
+the refill rate caps the sustained load. The buckets live in **Redis**, so every gateway instance
+shares the same counts. The key is the tenant claim from the token, so one company's traffic
+can't starve another's.
+
+### 4.14 Timeouts and circuit breakers
+- **Timeout:** a call slower than 3 s is abandoned, and the caller gets a 503 immediately.
+- **Circuit breaker** (Resilience4j): it watches recent calls. When at least half of the last 20
+  failed, it **opens**: for 15 s, calls fail instantly without reaching the struggling service,
+  giving it room to recover. Then it goes **half-open**, lets 3 trial calls through, and closes
+  again if they succeed.
+- **Fallback:** both cases return a clear 503 problem response with the correlation ID, never a
+  hanging request or a raw stack trace.
+
+### 4.15 Defence in depth
+The gateway validates tokens, **and** each service validates them again. Why both? If someone
+reaches a service directly (misconfigured network, internal attacker), the service is still
+protected. Never rely on "traffic always comes through the gateway".
+
+### 4.16 Testing the gateway
+The tests start the real gateway, a real Redis, and small JDK HTTP servers standing in for the
+services. One backend answers slowly, and another address has nothing listening. They prove:
+- routing passes along the token and the correlation ID;
+- bad tokens are stopped at the edge;
+- one tenant is throttled while another isn't;
+- a slow backend returns 503 in about 1 s instead of hanging for 5 s;
+- a dead backend returns a 503 problem response.
+
+### 4.17 Containers
+Each service has a small `Dockerfile`: a JRE-only image that runs as a non-root user, with the heap
+sized from the container's memory limit. `docker compose --profile app up --build` runs the
+whole system locally. Kafka has two listeners: `localhost:9092` for apps on your machine and
+`kafka:19092` for other containers.
+
+### 4.18 Interview questions for Milestone 4b
+36. Why put an API gateway in front of microservices? What should *not* go in it?
+37. Why is the gateway reactive while the services aren't?
+38. Explain the token-bucket algorithm. Why store buckets in Redis?
+39. What are the three states of a circuit breaker, and what triggers each transition?
+40. If the gateway already validates tokens, why do services validate them again?
+41. What does a 429 tell a client, and how should a well-behaved client react?
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·

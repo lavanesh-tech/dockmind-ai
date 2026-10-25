@@ -1,6 +1,6 @@
 # DockMind AI: Architecture
 
-This describes the **target** architecture. **Built so far (M4a):** `shipment-service` (REST,
+This describes the **target** architecture. **Built so far (M4b):** `api-gateway` (:8080), `shipment-service` (REST,
 outbox → Kafka), `dock-scheduling-service` (docks, events → read model, schedules), and the shared
 `common`, `common-security` and `scheduling-engine` modules. Event contracts: [EVENTS.md](EVENTS.md).
 
