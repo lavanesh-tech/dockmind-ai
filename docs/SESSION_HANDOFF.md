@@ -13,8 +13,12 @@ For the next Claude conversation: read this, then `docs/PROJECT_CONTEXT.md`, the
   Central, so Claude cannot compile; the developer's Mac can. Docker Desktop must be running for tests.
 - **Stack versions:** Java 21, Spring Boot 4.1.1, Spring Cloud 2025.1.3, PostgreSQL 17,
   Testcontainers 2.x (package `org.testcontainers.postgresql`).
-- **Where we are:** M1 `6894a2e`, M2 `6637873`, M3 `e6c5e1c`, M4a `4744b31`, M4b `0ebe0f6`, M5a `c96c83d` (415 tests) shipped.
-  M5b (disruption-recovery-service, :8083) code complete, awaiting `ship.sh`. Next: M5c Spring AI.
+- **Where we are:** M1 `6894a2e`, M2 `6637873`, M3 `e6c5e1c`, M4a `4744b31`, M4b `0ebe0f6`, M5a `c96c83d`, M5b `3356005` (424 tests) shipped.
+  M5c (ai-operations-service, :8084, Spring AI 2.0.2) code complete, awaiting `ship.sh`. Next: M6.
+- **Spring AI facts checked in the v2.0.2 source:** starter `spring-ai-starter-model-openai`, BOM
+  `org.springframework.ai:spring-ai-bom`; `spring.ai.model.chat=none` disables the OpenAI chat model;
+  tools need the model's options to be `ToolCallingChatOptions`; unknown tool → `IllegalStateException`
+  "No ToolCallback found".
 - **Confirmed from spring-cloud-dependencies 2025.1.3 on the Mac:** Gateway 5.0.3
   (`spring-cloud-starter-gateway-server-webflux`), CircuitBreaker 5.0.3
   (`spring-cloud-starter-circuitbreaker-reactor-resilience4j`).

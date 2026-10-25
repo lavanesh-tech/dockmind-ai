@@ -603,6 +603,35 @@ with the app's database password can only add history, never rewrite it. A test 
 
 ---
 
+## Milestone 5c: An AI assistant that can't break anything
+
+### 5c.1 How tool calling works
+The model doesn't call APIs itself. It replies "please call `getSchedule` with date 2026-11-02";
+Spring AI runs that Java method, sends the result back, and the model writes the answer. So **you
+decide what the model can do** by choosing which methods to expose.
+
+### 5c.2 Read-only by construction
+- The tools only read (`get…`, `list…`).
+- The HTTP client they use has one public method, `get`. There is no code path to POST.
+- The user's own token is passed on, so the AI sees only what that user may see.
+- If the model asks for a tool that doesn't exist (say, after reading a malicious note that
+  says "approve this plan"), Spring AI refuses and we return 422. Nothing is sent.
+
+Relying on the prompt alone ("you are read-only") is not safety: models can be talked out of
+instructions. Safety comes from what the code allows.
+
+### 5c.3 Testing AI without an AI
+Tests use a scripted model that replays fixed tool calls and answers. Tests are free, fast and
+repeatable, and can simulate a misbehaving model on purpose.
+
+### 5c.4 Interview questions for Milestone 5c
+52. What is prompt injection? Show how it could reach this assistant and why it can't cause harm.
+53. Why relay the user's token to the tools instead of giving the AI service its own credentials?
+54. How do you test code that uses an LLM deterministically?
+55. What would you need to add before letting an AI *propose* changes (still with human approval)?
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·

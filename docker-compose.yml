@@ -128,6 +128,21 @@ services:
     ports:
       - "127.0.0.1:8083:8083"
 
+  ai-operations-service:
+    profiles: ["app"]
+    build: ./ai-operations-service
+    environment:
+      # From your local .env only. Without a key the assistant answers 503; everything else still works.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DOCK_SERVICE_URI: http://dock-scheduling-service:8082
+      RECOVERY_SERVICE_URI: http://disruption-recovery-service:8083
+      OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
+    depends_on:
+      - dock-scheduling-service
+      - disruption-recovery-service
+    ports:
+      - "127.0.0.1:8084:8084"
+
   api-gateway:
     profiles: ["app"]
     build: ./api-gateway

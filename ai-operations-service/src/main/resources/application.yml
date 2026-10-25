@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: ai-operations-service
+  ai:
+    model:
+      # Only a chat model is used. "none" switches a model type off.
+      chat: ${AI_CHAT_PROVIDER:openai}
+      embedding: none
+      image: none
+      audio:
+        speech: none
+        transcription: none
+      moderation: none
+    openai:
+      # Read from the environment (your local .env). Never committed, never logged.
+      api-key: ${OPENAI_API_KEY:}
+      chat:
+        model: ${OPENAI_MODEL:gpt-5-mini}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/dockmind}
+
+dockmind:
+  ai:
+    dock-scheduling-url: ${DOCK_SERVICE_URI:http://localhost:8082}
+    disruption-recovery-url: ${RECOVERY_SERVICE_URI:http://localhost:8083}
+    connect-timeout: 2s
+    read-timeout: 5s
+    # Tool results larger than this are cut before they reach the model (cost and prompt-size control).
+    max-tool-result-chars: 20000
+
+server:
+  port: ${SERVER_PORT:8084}
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-exception: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:-},%X{correlationId:-}]"

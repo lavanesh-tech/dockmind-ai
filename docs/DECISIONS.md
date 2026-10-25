@@ -166,6 +166,18 @@ as stale closes the disruption as FAILED, with the reason in the audit trail.
 and the repository has no update or delete methods. History can't be rewritten by a bug or by
 anyone using the application's database credentials.
 
+## D36. Spring AI 2.0.2 with OpenAI, behind a scripted model in tests (M5c)
+Spring AI 2.0 is the line built for Spring Boot 4. Tests replace the model with a scripted
+`ChatModel` that plays back tool calls and answers, so the build needs no API key, costs nothing
+and is deterministic. The real key is read from the environment (local `.env`) only.
+
+## D37. The AI is read-only by construction, not by prompt (M5c)
+The assistant's only path to other services is `ReadOnlyBackend`, whose single public method is a
+GET; its tools are reads; the user's own token is relayed so the other services enforce tenant and
+role. A tool the model asks for but doesn't have is refused (422) and nothing is executed. The
+system prompt also says "read-only", but safety doesn't depend on the model obeying it: tests
+script a prompt-injected model that tries to approve a plan and prove no request but GETs is sent.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.
