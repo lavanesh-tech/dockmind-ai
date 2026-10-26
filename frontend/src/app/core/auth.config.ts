@@ -6,7 +6,10 @@ import { AuthConfig } from 'angular-oauth2-oidc';
  * sent only to this app's own /api (see app.config.ts).
  */
 export const authConfig: AuthConfig = {
-  issuer: 'http://localhost:8180/realms/dockmind',
+  // Local development: Keycloak on :8180. Deployed: Keycloak behind the same load balancer as the app.
+  issuer: window.location.port === '4200'
+    ? 'http://localhost:8180/realms/dockmind'
+    : `${window.location.origin}/realms/dockmind`,
   clientId: 'dockmind-web',
   responseType: 'code',
   redirectUri: window.location.origin + '/',

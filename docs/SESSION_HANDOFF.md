@@ -16,7 +16,8 @@ For the next Claude conversation: read this, then `docs/PROJECT_CONTEXT.md`, the
 - **Where we are:** M1 `6894a2e`, M2 `6637873`, M3 `e6c5e1c`, M4a `4744b31`, M4b `0ebe0f6`, M5a `c96c83d`, M5b `3356005` (424 tests) shipped.
   M5c `ea14625`, M6 `bbe742c` (438 + 9 web tests) shipped; the developer ran
   the full system and used it in Chrome. M7 (observability, k6, outbox retention, local port fixes)
-  code complete, awaiting `ship.sh`. **M8 / AWS is paused: the developer said to stop before AWS.**
+  shipped (`9fb5862`, measured load results `148e746`). M8 code (Jenkinsfile, Terraform, build script,
+  cost estimate) written; **never run anything against AWS without the developer's explicit go-ahead.**
 - **Copying files to the Mac:** `device_commit_files` once left a stale file; after copying, verify with
   `device_bash` (grep the change) or write directly with `device_bash`. Re-run `chmod +x scripts/*.sh`.
 - **Cloud workspace can:** run npm (registry allowed), build/test the Angular app, download and run

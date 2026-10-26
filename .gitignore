@@ -36,3 +36,12 @@ playwright-report/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Terraform: local state and variables can contain secrets
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+tfplan
+.terraform.lock.hcl

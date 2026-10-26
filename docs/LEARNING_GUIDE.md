@@ -691,6 +691,32 @@ and you can see which service gets slow first.
 
 ---
 
+## Milestone 8: From laptop to cloud (prepared, not deployed)
+
+### 8.1 Infrastructure as code
+Terraform files describe every AWS resource (network, load balancer, containers, database, secrets).
+`terraform plan` shows exactly what would change before anything happens; `apply` does it; `destroy`
+removes it all. The same files always produce the same environment, and changes are reviewed in Git.
+
+### 8.2 The pipeline
+Jenkins runs the same gates as `ship.sh` on every push: tests, web app build, `terraform validate`.
+Publishing images and deploying are off by default, and deploying stops for a human to approve the
+plan. Fast feedback for every change; deliberate, reviewed changes to paid infrastructure.
+
+### 8.3 Cost is a design input
+NAT gateway vs. public IPs, Graviton vs. x86, one database with schemas vs. three databases, MSK vs.
+a Kafka container: each is a trade-off between cost and production-grade resilience, written down in
+DECISIONS.md and `docs/AWS_COST_ESTIMATE.md`.
+
+### 8.4 Interview questions for Milestone 8
+66. What does `terraform plan` protect you from? Why gate `apply` behind approval?
+67. Where do secrets live in this design, and who can read them?
+68. Why Fargate rather than EC2 or Kubernetes here?
+69. What would you change to make this production-ready (HTTPS, Multi-AZ, MSK, private subnets...)?
+70. How would you roll back a bad deployment? (Hint: immutable image tags, the ECS circuit breaker.)
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·

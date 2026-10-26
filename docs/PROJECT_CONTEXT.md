@@ -2,15 +2,16 @@
 
 Read this first when resuming work. It records the actual current state, not the plan.
 
-_Last updated: 2026-10-25, Milestone 7 (of M1–M8; M4 in two parts, M5 in three)._
+_Last updated: 2026-10-25, Milestone 8 (of M1–M8; M4 in two parts, M5 in three)._
 
 ## Current state
 
 | Item | State |
 |---|---|
-| Shipped | **M1** `6894a2e` (37 tests) · **M2** `6637873` (336) · **M3** `e6c5e1c` (370) · **M4a** `4744b31` (385: 17 common, 5 common-security, 299 engine, 51 shipment, 13 dock) · **M4b** `0ebe0f6` (393) · **M5a** `c96c83d` (415) · **M5b** `3356005` (424) · **M5c** `ea14625` (433) · **M6** `bbe742c` (438 + 9 web). All pushed and confirmed on `origin/main`, 2026-10-25. |
-| In progress | **M7 observability, load tests, outbox retention**: code complete, not yet built. Also carries the local fixes made while first running the system (ports, `.env` repair, Angular analytics prompt). **M8 (AWS) is paused until the developer explicitly approves.** |
+| Shipped | **M1** `6894a2e` (37 tests) · **M2** `6637873` (336) · **M3** `e6c5e1c` (370) · **M4a** `4744b31` (385: 17 common, 5 common-security, 299 engine, 51 shipment, 13 dock) · **M4b** `0ebe0f6` (393) · **M5a** `c96c83d` (415) · **M5b** `3356005` (424) · **M5c** `ea14625` (433) · **M6** `bbe742c` (438 + 9 web) · **M7** `9fb5862` + `148e746` (440 + 9 web, measured load results). All pushed and confirmed on `origin/main`, 2026-10-25. |
+| In progress | **M8 code** (Jenkinsfile, Terraform, image build, cost estimate): written, Terraform formatted; `validate` runs in `ship.sh`. **Not deployed: the developer said to stop before anything touches AWS.** |
 | Build machine | Developer Mac: JDK 21.0.12 Temurin, Maven 3.10.0 (wrapper), Docker Desktop |
+| Load test (M7, measured on the Mac) | 15 req/s for 2 min through the gateway: p50 8.8 ms, p95 23.7 ms, p99 31.7 ms, 0% errors (`docs/benchmarks/load/RESULTS.md`) |
 | Verified metrics | `docs/benchmarks/RESULTS.md` (M2, generated on the Mac build; identical to the cloud run). At 140 trucks/day: dispatcher 0.0 unscheduled vs FCFS 10.4; urgent avg wait 6.7 vs 37.6 min. Dispatcher compute 469 ms at 180 trucks (an optimisation target for M7). |
 
 ## Modules
@@ -60,6 +61,6 @@ _Last updated: 2026-10-25, Milestone 7 (of M1–M8; M4 in two parts, M5 in three
 
 ## Next steps
 
-1. `./scripts/ship.sh "M7: observability, load testing and outbox retention"`.
-2. `./scripts/run-local.sh`, then Grafana at http://localhost:13000; in another window `./scripts/run-local.sh load`.
-3. M8 (Jenkins, Terraform, AWS): **wait for the developer's go-ahead and cost approval**.
+1. `./scripts/ship.sh "M8: Jenkins pipeline and Terraform for AWS (not deployed)"`.
+2. **Stop.** Deploying to AWS (~$200/month running, see `docs/AWS_COST_ESTIMATE.md`) needs the
+   developer's explicit go-ahead, an AWS account and a budget alert. Steps: `infra/README.md`.

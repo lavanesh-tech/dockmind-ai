@@ -8,7 +8,7 @@ and get a constraint-aware schedule. When a truck is late or a dock goes down, D
 computes feasible recovery plans, explains them, and asks a human to approve significant
 changes. Every decision is recorded in an audit trail.
 
-> **Status:** Milestone 7 (observability and load testing). Benchmark results:
+> **Status:** Milestone 8 (CI/CD and AWS infrastructure as code; not deployed). Benchmark results:
 > [docs/benchmarks/RESULTS.md](docs/benchmarks/RESULTS.md). See [ROADMAP.md](docs/ROADMAP.md) for
 > what is built and what is next. All data is synthetic, and any benchmark numbers come from
 > seeded simulations, not real customers.
@@ -49,6 +49,8 @@ test, scans for secrets, commits as the sole author, pushes and confirms GitHub 
 | `keycloak/` | Keycloak realm as code: roles, tenant claim, demo users |
 | `observability/` | Prometheus scrape config and the Grafana "DockMind overview" dashboard |
 | `loadtest/` | k6 load test |
+| `infra/` | Terraform for AWS (ECS Fargate, ALB, RDS, ElastiCache, ECR, S3, Secrets Manager); see infra/README.md |
+| `Jenkinsfile` | CI/CD: tests, web build, Terraform validate; optional image push and approved deploy |
 | `docs/` | Product spec, architecture, roadmap, decisions, learning guide |
 
 ## Documentation

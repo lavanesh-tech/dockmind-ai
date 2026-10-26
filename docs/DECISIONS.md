@@ -220,6 +220,28 @@ all bound to 127.0.0.1. Inside Docker the services still use their normal ports.
 the gateway, below the per-tenant rate limit, and writes p50/p95/p99 to `docs/benchmarks/load/`.
 Numbers are only ever taken from such a run; none are written by hand.
 
+## D46. AWS shape for a dev environment: ECS Fargate on arm64, one ALB, one RDS (M8)
+Fargate removes servers to manage; Graviton (arm64) costs less per vCPU. One Application Load
+Balancer routes by path to the gateway, Keycloak and the web app, so the browser sees one origin and
+needs no CORS. Services find each other through Cloud Map DNS. One PostgreSQL instance with a schema
+per service keeps data ownership separate at a fraction of the cost of three instances.
+
+## D47. No NAT gateway; containers in public subnets behind strict security groups (M8)
+A NAT gateway costs about $33/month on its own. Containers get public IPs for outbound calls (ECR,
+OpenAI) but accept inbound traffic only from the load balancer and each other. The database and
+Redis stay in private subnets. Production would use private subnets with NAT or VPC endpoints.
+
+## D48. Secrets generated in AWS, never in Git or task definitions (M8)
+Terraform generates passwords into Secrets Manager; ECS injects them at start-up; the execution role
+can read only DockMind's secrets and the containers' own role has no AWS permissions. The OpenAI key
+is set by the developer with the AWS CLI. Terraform state holds generated values, so it stays local
+(gitignored) or in an encrypted, locked S3 backend.
+
+## D49. The pipeline deploys only on request and after human approval (M8)
+Every Jenkins build runs all tests and `terraform validate`. Pushing images and deploying are
+parameters that default to off; deploying shows a `terraform plan` and waits for a person to
+approve before `apply`, then checks the app is healthy.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.

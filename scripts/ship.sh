@@ -56,6 +56,12 @@ if ! (cd frontend && npm ci --no-audit --no-fund --loglevel=error && npm run bui
   fail "Web app build or tests failed. Copy everything above this line and paste it to Claude."
 fi
 
+echo
+echo "Infrastructure code: terraform fmt + validate (no AWS access)"
+if ! ./scripts/validate-infra.sh 2>&1 | tee -a "$LOG"; then
+  fail "Terraform validation failed. Copy everything above this line and paste it to Claude."
+fi
+
 step "4/6 Scanning changes for secrets"
 git add -A
 SECRET_PATTERNS='(sk-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|ghp_[A-Za-z0-9]{30,}|xox[baprs]-[A-Za-z0-9-]{10,})'
