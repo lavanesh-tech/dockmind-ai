@@ -6,15 +6,15 @@ Synthetic workloads only (see [BENCHMARKS.md](../BENCHMARKS.md) for the model an
 
 | Trucks/day | Algorithm | Avg wait (min) | p95 wait (min) | Urgent avg wait (min) | Unscheduled | Urgent unscheduled | Dock utilization | Compute (ms) |
 |---|---|---|---|---|---|---|---|---|
-| 100 | FCFS | 17.2 | 52.3 | 15.2 | 0.8 | 0.8 | 42.4% | 1.4 |
-| 100 | PRIORITY_AWARE | 20.0 | 66.8 | 0.0 | 0.0 | 0.0 | 42.7% | 1.7 |
-| 100 | DOCKMIND_DISPATCH | 14.8 | 51.8 | 4.5 | 0.2 | 0.2 | 42.6% | 9.3 |
-| 140 | FCFS | 54.7 | 112.6 | 37.6 | 10.4 | 10.4 | 55.0% | 2.8 |
-| 140 | PRIORITY_AWARE | 82.8 | 188.8 | 0.4 | 1.0 | 0.0 | 59.2% | 3.5 |
-| 140 | DOCKMIND_DISPATCH | 75.9 | 174.6 | 6.7 | 0.0 | 0.0 | 59.7% | 130.3 |
-| 180 | FCFS | 111.7 | 203.9 | 36.6 | 23.2 | 22.2 | 66.2% | 7.4 |
-| 180 | PRIORITY_AWARE | 122.7 | 237.7 | 0.9 | 22.6 | 0.0 | 66.4% | 6.5 |
-| 180 | DOCKMIND_DISPATCH | 120.3 | 235.4 | 7.5 | 18.6 | 0.0 | 68.4% | 504.6 |
+| 100 | FCFS | 17.2 | 52.3 | 15.2 | 0.8 | 0.8 | 42.4% | 1.9 |
+| 100 | PRIORITY_AWARE | 20.0 | 66.8 | 0.0 | 0.0 | 0.0 | 42.7% | 1.9 |
+| 100 | DOCKMIND_DISPATCH | 14.8 | 51.8 | 4.5 | 0.2 | 0.2 | 42.6% | 9.7 |
+| 140 | FCFS | 54.7 | 112.6 | 37.6 | 10.4 | 10.4 | 55.0% | 2.5 |
+| 140 | PRIORITY_AWARE | 82.8 | 188.8 | 0.4 | 1.0 | 0.0 | 59.2% | 3.1 |
+| 140 | DOCKMIND_DISPATCH | 75.9 | 174.6 | 6.7 | 0.0 | 0.0 | 59.7% | 115.3 |
+| 180 | FCFS | 111.7 | 203.9 | 36.6 | 23.2 | 22.2 | 66.2% | 6.5 |
+| 180 | PRIORITY_AWARE | 122.7 | 237.7 | 0.9 | 22.6 | 0.0 | 66.4% | 6.2 |
+| 180 | DOCKMIND_DISPATCH | 120.3 | 235.4 | 7.5 | 18.6 | 0.0 | 68.4% | 440.1 |
 
 All 45 schedules passed the independent validator with 0 violations.
 
@@ -24,7 +24,7 @@ All 45 schedules passed the independent validator with 0 violations.
 
 | Disruption | Cases | Recovery success | Recommended MINIMAL_CHANGE | Avg moved (minimal) | Avg moved (full) | Median compute (ms) |
 |---|---|---|---|---|---|---|
-| LATE_ARRIVAL | 25 | 100% | 3 of 25 | 0.4 | 22.1 | 103.8 |
-| DOCK_OUTAGE | 25 | 100% | 8 of 25 | 3.0 | 50.7 | 101.3 |
+| LATE_ARRIVAL | 25 | 100% | 3 of 25 | 0.4 | 22.1 | 88.5 |
+| DOCK_OUTAGE | 25 | 100% | 8 of 25 | 3.0 | 50.7 | 95.7 |
 
 *Recovery success* = the recommended plan is valid and no urgent truck that was scheduled before the disruption ends up unscheduled. *Moved* = appointments whose dock or start time changed, or that were dropped.
