@@ -2,7 +2,7 @@ spring:
   application:
     name: dock-scheduling-service
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5433/dock}
+    url: ${DB_URL:jdbc:postgresql://localhost:15433/dock}
     username: ${DB_USERNAME:dockmind}
     password: ${DB_PASSWORD}
   jpa:
@@ -41,10 +41,27 @@ server:
     include-exception: false
 
 management:
+  metrics:
+    tags:
+      # Lets dashboards group and filter by service.
+      application: ${spring.application.name}
+    distribution:
+      # Histogram buckets, so Prometheus can compute p50/p95/p99 latency.
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      # Every request is traced locally; production would sample (e.g. 0.1).
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    metrics:
+      export:
+        # Metrics are pulled by Prometheus from /actuator/prometheus; only traces are pushed (OTLP).
+        enabled: false
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
     health:
       show-details: never

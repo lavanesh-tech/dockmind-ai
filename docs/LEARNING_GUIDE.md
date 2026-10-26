@@ -663,6 +663,34 @@ enforced again by the services.
 
 ---
 
+## Milestone 7: Seeing inside a running system
+
+### 7.1 The three signals
+- **Metrics:** numbers over time (requests/s, error rate, latency percentiles, heap). Cheap, good
+  for dashboards and alerts. Each service exposes them at `/actuator/prometheus`; Prometheus
+  collects them every 15 s.
+- **Traces:** the path of one request through the gateway and services, with timings per step.
+  Sent with OpenTelemetry to Tempo. Use them to find *where* time is spent.
+- **Logs:** what happened, with the correlation ID to tie lines together.
+
+### 7.2 Percentiles, not averages
+An average hides the slow requests users complain about. p95 = 95% of requests were faster than
+this; p99 shows the tail. Services publish histogram buckets so Prometheus can compute them.
+
+### 7.3 Load testing
+k6 sends a fixed rate of requests (an "open" model: like real users, it doesn't wait for the
+system to catch up) and reports p50/p95/p99 and failures. Run it, look at Grafana at the same time,
+and you can see which service gets slow first.
+
+### 7.4 Interview questions for Milestone 7
+61. Metrics vs. traces vs. logs: which would you use to find a slow endpoint, and why?
+62. Why report p95/p99 instead of the average?
+63. What is the difference between pull (Prometheus) and push (OTLP)? When is each better?
+64. Why does a load test use a constant arrival rate instead of N looping users?
+65. Your outbox table grows forever. How do you clean it safely?
+
+---
+
 ## Coming in later milestones
 
 Database modeling and transactions (2) · scheduling algorithms and data structures (3) ·

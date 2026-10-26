@@ -62,7 +62,9 @@ dispatcher does by hand without priorities.
 - Disruption recovery (M5a) is in the "Disruption recovery" section of `RESULTS.md` and
   `recovery.csv`: 140 trucks, decision at 12:00, seeded late arrivals and two-hour dock outages,
   comparing how many appointments each strategy moves and whether every plan is valid.
-- API latency, Kafka throughput and failure recovery time are measured in M7.
+- API latency under load: `./scripts/run-local.sh load` writes `docs/benchmarks/load/RESULTS.md` (p50/p95/p99,
+  failures) from a real run on the developer's machine. Outbox throughput and recovery planning time
+  are live metrics on the Grafana dashboard.
 
 ## Reproduce
 

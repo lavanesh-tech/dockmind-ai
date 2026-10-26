@@ -30,6 +30,8 @@ import com.dockmind.scheduling.recovery.RecoveryPlanner;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.ArrayList;
 import java.util.HashMap;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -64,13 +66,16 @@ public class ScheduleService {
     private final ScheduleRunRepository runs;
     private final Scheduler scheduler = new DispatchScheduler();
     private final int adminApprovalMovedThreshold;
+    private final MeterRegistry meters;
 
     public ScheduleService(DockRepository docks, ShipmentViewRepository shipments, ScheduleRunRepository runs,
-                           @Value("${dockmind.recovery.admin-approval-moved-threshold:3}") int adminApprovalMovedThreshold) {
+                           @Value("${dockmind.recovery.admin-approval-moved-threshold:3}") int adminApprovalMovedThreshold,
+                           MeterRegistry meters) {
         this.docks = docks;
         this.shipments = shipments;
         this.runs = runs;
         this.adminApprovalMovedThreshold = adminApprovalMovedThreshold;
+        this.meters = meters;
     }
 
     /** The current schedule in engine terms, for planners such as Disruption Recovery. */
@@ -136,6 +141,7 @@ public class ScheduleService {
                         byId.get(UUID.fromString(a.jobId())).getReference(), a.dockId(), a.start(), a.end())).toList(),
                 proposed.unscheduled().stream().map(u -> new UnscheduledRow(UUID.fromString(u.jobId()),
                         byId.get(UUID.fromString(u.jobId())).getReference(), u.reason().name())).toList()));
+        meters.counter("dockmind.schedule.applied", "label", request.label()).increment();
         log.info("Applied schedule '{}' for tenant {} on {} by {} (moved {}): {}", request.label(), tenantId, date,
                 requestedBy, moved, request.reason());
         return ScheduleResponse.from(run);
@@ -218,7 +224,14 @@ public class ScheduleService {
                 tenantDocks.stream().map(d -> toEngineDock(d, date)).toList(),
                 pending.stream().map(ScheduleService::toJob).toList(),
                 crewCapacity);
+        Timer.Sample computeTime = Timer.start(meters);
         Schedule schedule = scheduler.schedule(problem);
+        computeTime.stop(Timer.builder("dockmind.schedule.compute")
+                .description("Time the scheduling engine takes to compute a day's schedule")
+                .publishPercentileHistogram()
+                .register(meters));
+        meters.summary("dockmind.schedule.trucks", "result", "scheduled").record(schedule.assignments().size());
+        meters.summary("dockmind.schedule.trucks", "result", "unscheduled").record(schedule.unscheduled().size());
 
         List<Violation> violations = ScheduleValidator.validate(problem, schedule);
         if (!violations.isEmpty()) {

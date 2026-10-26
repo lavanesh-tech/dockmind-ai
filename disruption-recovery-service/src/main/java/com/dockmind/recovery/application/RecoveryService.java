@@ -21,6 +21,8 @@ import com.dockmind.scheduling.model.SchedulingProblem;
 import com.dockmind.scheduling.recovery.RecoveryOutcome;
 import com.dockmind.scheduling.recovery.RecoveryPlan;
 import com.dockmind.scheduling.recovery.RecoveryPlanner;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -52,11 +54,13 @@ public class RecoveryService {
     private final TransactionTemplate tx;
     private final JsonMapper json;
     private final Clock clock;
+    private final MeterRegistry meters;
     private final RecoveryPlanner planner = new RecoveryPlanner();
 
     public RecoveryService(DisruptionRepository disruptions, StoredPlanRepository plans, AuditEntryRepository audit,
                            DockSchedulingClient dock, RecoveryProperties properties, TransactionTemplate tx,
-                           JsonMapper json, Clock clock) {
+                           JsonMapper json, Clock clock, MeterRegistry meters) {
+        this.meters = meters;
         this.disruptions = disruptions;
         this.plans = plans;
         this.audit = audit;
@@ -102,6 +106,7 @@ public class RecoveryService {
         }
 
         RecoveryOutcome outcome;
+        Timer.Sample planning = Timer.start(meters);
         try {
             outcome = planner.plan(problem, SnapshotMapping.current(snapshot), engineDisruption, decisionTime);
         } catch (IllegalArgumentException e) {
@@ -111,6 +116,10 @@ public class RecoveryService {
             throw ApiException.conflict("No valid recovery plan exists for this disruption.");
         }
 
+        planning.stop(Timer.builder("dockmind.recovery.planning")
+                .description("Time to generate and validate recovery plans").tag("type", request.type().name())
+                .register(meters));
+        meters.counter("dockmind.disruptions.reported", "type", request.type().name()).increment();
         List<StoredPlan> stored = new java.util.ArrayList<>();
         int rank = 1;
         for (RecoveryPlan plan : outcome.plans()) {
@@ -189,6 +198,7 @@ public class RecoveryService {
                     audit.save(new AuditEntry(tenantId, id, "APPLY_FAILED", user, clock.instant(),
                             strategy + " rejected by Dock Scheduling: schedule changed or plan no longer valid"));
                 });
+                meters.counter("dockmind.recovery.decisions", "outcome", "stale", "strategy", strategy).increment();
             }
             throw e;
         }
@@ -205,6 +215,7 @@ public class RecoveryService {
             audit.save(new AuditEntry(tenantId, id, "APPLIED", "system", now,
                     strategy + " saved as schedule run " + applied.runId() + ", moving " + plan.getMoved() + " appointment(s)"));
         });
+        meters.counter("dockmind.recovery.decisions", "outcome", "applied", "strategy", strategy).increment();
         return get(tenantId, id);
     }
 
@@ -219,6 +230,7 @@ public class RecoveryService {
             disruptions.save(d);
             audit.save(new AuditEntry(tenantId, id, "REJECTED", user, now, note));
         });
+        meters.counter("dockmind.recovery.decisions", "outcome", "rejected", "strategy", "none").increment();
         return get(tenantId, id);
     }
 

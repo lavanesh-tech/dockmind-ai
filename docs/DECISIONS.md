@@ -195,6 +195,31 @@ Angular 22 supports the developer's Node 26. Tailwind is used for layout utiliti
 so it doesn't fight Material's styles. `ship.sh` builds and unit-tests the web app; the Playwright
 end-to-end workflow test needs the whole system running, so it is `run-local.sh e2e`.
 
+## D41. Prometheus pulls metrics; OpenTelemetry pushes traces (M7)
+Each service exposes `/actuator/prometheus` (Micrometer) and Prometheus scrapes it: exact,
+well-known metric names and no push infrastructure to fail. Traces are exported over OTLP to an
+OpenTelemetry collector, only when an endpoint is configured (Docker Compose sets it; tests don't).
+Locally, `grafana/otel-lgtm` bundles the collector, Prometheus, Tempo, Loki and Grafana in one container.
+
+## D42. Business metrics next to technical ones (M7)
+Besides HTTP and JVM metrics: schedule computation time, trucks scheduled/unscheduled, outbox
+published/failed/pending, disruptions reported, recovery decisions by outcome, assistant answers by
+outcome and tool calls. Operators see whether the product works, not just whether servers are up.
+
+## D43. Outbox retention: delete published rows after 7 days, in batches (M7)
+Unpublished rows are never deleted. Batches of 500 keep transactions short; a partial index on
+`published_at` keeps the delete cheap. Retention is configurable (`dockmind.outbox.retention`).
+
+## D44. Local ports avoid common defaults (M7)
+Developers often already run PostgreSQL on 5432 and apps on 8080. DockMind publishes databases on
+15432–15434, the gateway on 18080, services on 18081–18084, Grafana on 13000 and Prometheus on 19090,
+all bound to 127.0.0.1. Inside Docker the services still use their normal ports.
+
+## D45. Load tests with k6 against the real local system (M7)
+`run-local.sh load` signs in through Keycloak and sends a steady mix of reads and bookings through
+the gateway, below the per-tenant rate limit, and writes p50/p95/p99 to `docs/benchmarks/load/`.
+Numbers are only ever taken from such a run; none are written by hand.
+
 ## D9. External OIDC provider, proposed Keycloak (proposed; decide in Phase 6)
 Writing an authorization server from scratch is risky and not the project's focus. A standard
 provider issues JWTs, and the services validate them as OAuth2 resource servers.

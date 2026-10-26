@@ -8,7 +8,7 @@ and get a constraint-aware schedule. When a truck is late or a dock goes down, D
 computes feasible recovery plans, explains them, and asks a human to approve significant
 changes. Every decision is recorded in an audit trail.
 
-> **Status:** Milestone 6 (login and web app). Benchmark results:
+> **Status:** Milestone 7 (observability and load testing). Benchmark results:
 > [docs/benchmarks/RESULTS.md](docs/benchmarks/RESULTS.md). See [ROADMAP.md](docs/ROADMAP.md) for
 > what is built and what is next. All data is synthetic, and any benchmark numbers come from
 > seeded simulations, not real customers.
@@ -21,11 +21,12 @@ Requirements: JDK 21+, Node.js 22.22+/24/26, Docker Desktop.
 ./scripts/run-local.sh       # builds, starts every service, Keycloak and the web app
 # open http://localhost:4200 and sign in as admin.acme, dispatcher.acme, viewer.acme or dispatcher.globex
 # (password: DEMO_USER_PASSWORD in .env, generated on first run)
+./scripts/run-local.sh load  # k6 load test; dashboards at http://localhost:13000 (Grafana)
 ./scripts/run-local.sh stop  # stop everything
 ./mvnw verify                # all backend tests (Docker must be running)
 ```
 
-API docs: run the service, then open `http://localhost:8081/swagger-ui.html`. Every
+API docs: run the service, then open `http://localhost:18081/swagger-ui.html`. Every
 `/api/v1` call needs a bearer token with a `tenant_id` claim and a DockMind role.
 
 To ship a milestone: `./scripts/ship.sh "Mx: description"`. This formats the code, runs every
@@ -46,6 +47,8 @@ test, scans for secrets, commits as the sole author, pushes and confirms GitHub 
 | `api-gateway/` | Single entry point (:8080): routing, edge auth, per-tenant rate limits, circuit breakers |
 | `frontend/` | Angular 22 web app (Material + Tailwind), OIDC login with PKCE (:4200) |
 | `keycloak/` | Keycloak realm as code: roles, tenant claim, demo users |
+| `observability/` | Prometheus scrape config and the Grafana "DockMind overview" dashboard |
+| `loadtest/` | k6 load test |
 | `docs/` | Product spec, architecture, roadmap, decisions, learning guide |
 
 ## Documentation

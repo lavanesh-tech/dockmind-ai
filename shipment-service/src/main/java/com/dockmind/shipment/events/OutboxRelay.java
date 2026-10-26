@@ -1,6 +1,9 @@
 package com.dockmind.shipment.events;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -36,11 +39,21 @@ public class OutboxRelay {
     private final OutboxRepository outbox;
     private final KafkaTemplate<String, String> kafka;
     private final TransactionTemplate tx;
+    private final Counter publishedCounter;
+    private final Counter failedCounter;
 
-    public OutboxRelay(OutboxRepository outbox, KafkaTemplate<String, String> kafka, TransactionTemplate tx) {
+    public OutboxRelay(OutboxRepository outbox, KafkaTemplate<String, String> kafka, TransactionTemplate tx,
+                       MeterRegistry meters) {
         this.outbox = outbox;
         this.kafka = kafka;
         this.tx = tx;
+        this.publishedCounter = Counter.builder("dockmind.outbox.published")
+                .description("Events relayed from the outbox to Kafka").register(meters);
+        this.failedCounter = Counter.builder("dockmind.outbox.publish.failures")
+                .description("Failed attempts to relay an outbox event (retried later)").register(meters);
+        // How far behind the relay is. Should stay near 0; growth means Kafka is down or slow.
+        Gauge.builder("dockmind.outbox.pending", outbox, OutboxRepository::countByPublishedAtIsNull)
+                .description("Outbox events not yet published").register(meters);
     }
 
     /** Runs on a schedule. The explicit transaction holds the row locks while the batch is sent. */
@@ -70,12 +83,14 @@ public class OutboxRelay {
                 kafka.send(record).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                 event.markPublished(Instant.now());
                 published++;
+                publishedCounter.increment();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 event.recordFailure("interrupted");
                 break;
             } catch (Exception e) {
                 event.recordFailure(e.getClass().getSimpleName() + ": " + e.getMessage());
+                failedCounter.increment();
                 log.warn("Outbox publish failed for event {} (attempt {}); will retry", event.getId(), event.getAttempts());
                 break;
             }

@@ -4,6 +4,8 @@ import com.dockmind.ai.api.AskResponse;
 import com.dockmind.ai.tools.OperationsTools;
 import com.dockmind.ai.tools.ReadOnlyBackend;
 import com.dockmind.common.web.ApiException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -22,15 +24,19 @@ public class AssistantService {
 
     private final ChatClient chat;
     private final ReadOnlyBackend backend;
+    private final MeterRegistry meters;
 
-    public AssistantService(ChatClient assistantChatClient, ReadOnlyBackend backend) {
+    public AssistantService(ChatClient assistantChatClient, ReadOnlyBackend backend, MeterRegistry meters) {
         this.chat = assistantChatClient;
         this.backend = backend;
+        this.meters = meters;
     }
 
     public AskResponse ask(String tenantId, String question, String token) {
         OperationsTools tools = new OperationsTools(backend, token);
         String answer;
+        Timer.Sample sample = Timer.start(meters);
+        String outcome = "answered";
         try {
             answer = chat.prompt()
                     .user(question)
@@ -38,6 +44,7 @@ public class AssistantService {
                     .call()
                     .content();
         } catch (RuntimeException e) {
+            outcome = requestedUnknownTool(e) ? "refused" : "unavailable";
             if (requestedUnknownTool(e)) {
                 log.warn("Tenant {}: model requested a tool it does not have; refused. Tools used before: {}",
                         tenantId, tools.used());
@@ -48,7 +55,12 @@ public class AssistantService {
             log.warn("Tenant {}: AI model call failed: {}", tenantId, e.getClass().getSimpleName());
             throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "ai-unavailable",
                     "The AI assistant is unavailable right now. Scheduling and recovery still work without it.");
+        } finally {
+            sample.stop(Timer.builder("dockmind.assistant.ask")
+                    .description("Time to answer one assistant question, including tool calls")
+                    .tag("outcome", outcome).register(meters));
         }
+        tools.used().forEach(t -> meters.counter("dockmind.assistant.tool.calls", "tool", t).increment());
         log.info("Tenant {}: answered a question using tools {}", tenantId, tools.used());
         return new AskResponse(answer == null ? "" : answer, tools.used(),
                 "AI-generated from DockMind data. Check the schedule before acting on it.");

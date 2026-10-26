@@ -4,6 +4,7 @@
 #
 #   ./scripts/run-local.sh          build, start everything, then serve the web app on http://localhost:4200
 #   ./scripts/run-local.sh e2e      run the end-to-end browser test against the running system
+#   ./scripts/run-local.sh load     run the k6 load test (results in docs/benchmarks/load/)
 #   ./scripts/run-local.sh stop     stop all containers (data is kept)
 #
 # Secrets live only in .env (gitignored). Missing values are generated here, once.
@@ -15,6 +16,10 @@ fail() { printf '\n\033[31mSTOPPED: %s\033[0m\n' "$*" >&2; exit 1; }
 
 ensure_env() {
   touch .env
+  # A last line without a newline would glue the next added value onto it; add the newline.
+  [[ -s .env && -n "$(tail -c1 .env)" ]] && echo >> .env
+  # Repair values that an earlier run glued onto the end of another line.
+  perl -pi -e 's/(?<=\S)((?:DB_USERNAME|DB_PASSWORD|KC_ADMIN_PASSWORD|DEMO_USER_PASSWORD|DOCKMIND_SMOKE_CLIENT_SECRET|OPENAI_API_KEY)=)/\n$1/g' .env
   for name in DB_PASSWORD KC_ADMIN_PASSWORD DEMO_USER_PASSWORD DOCKMIND_SMOKE_CLIENT_SECRET; do
     if ! grep -Eq "^${name}=.+" .env; then
       sed -i.bak "/^${name}=/d" .env && rm -f .env.bak
@@ -41,6 +46,19 @@ case "${1:-start}" in
     docker compose --profile app down
     ;;
 
+  load)
+    step "Load test (the system must be running: ./scripts/run-local.sh in another window)"
+    curl -fs -o /dev/null http://localhost:18080/actuator/health || fail "The API gateway is not running."
+    mkdir -p docs/benchmarks/load
+    docker run --rm --network dockmind-ai_default \
+      -v "$PWD/loadtest/k6:/scripts:ro" -v "$PWD/docs/benchmarks/load:/results" \
+      -e SMOKE_SECRET="$(env_value DOCKMIND_SMOKE_CLIENT_SECRET)" -e DEMO_USER_PASSWORD="$(env_value DEMO_USER_PASSWORD)" \
+      -e RATE="${RATE:-15}" -e DURATION="${DURATION:-2m}" \
+      grafana/k6:1.8.0 run /scripts/dockmind.js
+    echo
+    echo "Results: docs/benchmarks/load/RESULTS.md. Dashboards: http://localhost:13000 (DockMind overview)."
+    ;;
+
   e2e)
     step "End-to-end test (the system must be running: ./scripts/run-local.sh in another window)"
     curl -fs -o /dev/null http://localhost:4200 || fail "The web app is not running on http://localhost:4200."
@@ -65,8 +83,9 @@ case "${1:-start}" in
 
     step "4/5 Waiting for everything to be ready"
     wait_for http://localhost:8180/realms/dockmind "Keycloak"
-    wait_for http://localhost:8080/actuator/health "API gateway"
-    for port in 8081 8082 8083 8084; do wait_for "http://localhost:${port}/actuator/health" "Service on :${port}"; done
+    wait_for http://localhost:18080/actuator/health "API gateway"
+    for port in 18081 18082 18083 18084; do wait_for "http://localhost:${port}/actuator/health" "Service on :${port}"; done
+    wait_for http://localhost:13000/api/health "Grafana"
 
     step "5/5 Starting the web app"
     cd frontend
@@ -77,13 +96,15 @@ case "${1:-start}" in
     admin.acme · dispatcher.acme · viewer.acme · dispatcher.globex
   Password: $(cd .. && env_value DEMO_USER_PASSWORD)   (from your .env)
 
+  Monitoring: Grafana http://localhost:13000 (admin / admin) → Dashboards → "DockMind overview".
+
   Stop the web app with Ctrl+C. Stop everything else with: ./scripts/run-local.sh stop
 INFO
     npm start
     ;;
 
   *)
-    echo "Usage: ./scripts/run-local.sh [start|e2e|stop]" >&2
+    echo "Usage: ./scripts/run-local.sh [start|e2e|load|stop]" >&2
     exit 2
     ;;
 esac

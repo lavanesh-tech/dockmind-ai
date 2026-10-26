@@ -1,0 +1,24 @@
+# Prometheus inside the grafana/otel-lgtm container: the image's OTLP settings plus scrape jobs
+# for DockMind's services (their /actuator/prometheus endpoints, over the Docker network).
+global:
+  scrape_interval: 15s
+otlp:
+  keep_identifying_resource_attributes: true
+  promote_resource_attributes:
+    - service.instance.id
+    - service.name
+    - service.namespace
+    - service.version
+storage:
+  tsdb:
+    out_of_order_time_window: 10m
+scrape_configs:
+  - job_name: dockmind
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - api-gateway:8080
+          - shipment-service:8081
+          - dock-scheduling-service:8082
+          - disruption-recovery-service:8083
+          - ai-operations-service:8084

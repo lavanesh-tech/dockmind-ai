@@ -13,7 +13,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-dockmind}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     ports:
-      - "127.0.0.1:5432:5432"   # only reachable from this machine
+      - "127.0.0.1:15432:5432"   # only reachable from this machine; 15432 avoids clashing with a local PostgreSQL
     volumes:
       - shipment-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -29,7 +29,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-dockmind}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:15433:5432"
     volumes:
       - dock-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -45,7 +45,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-dockmind}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     ports:
-      - "127.0.0.1:5434:5432"
+      - "127.0.0.1:15434:5432"
     volumes:
       - recovery-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -70,6 +70,18 @@ services:
       - ./keycloak/realm-dockmind.json:/opt/keycloak/data/import/realm-dockmind.json:ro
     ports:
       - "127.0.0.1:8180:8080"
+
+  # Observability in one container (local use only): OpenTelemetry collector, Prometheus,
+  # Tempo (traces), Loki and Grafana. Grafana: http://localhost:13000 (admin / admin).
+  observability:
+    image: grafana/otel-lgtm:0.38.0
+    volumes:
+      - ./observability/prometheus.yaml:/otel-lgtm/prometheus.yaml:ro
+      - ./observability/grafana-dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/grafana-dashboards.yaml:ro
+      - ./observability/dockmind-dashboard.json:/otel-lgtm/dockmind-dashboard.json:ro
+    ports:
+      - "127.0.0.1:13000:3000"   # Grafana
+      - "127.0.0.1:19090:9090"   # Prometheus
 
   # Single-node Kafka in KRaft mode (no ZooKeeper). Fine for local development only.
   kafka:
@@ -111,11 +123,13 @@ services:
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
       # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
+      # Traces go to the observability container (OpenTelemetry collector -> Tempo).
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://observability:4318/v1/traces
     depends_on:
       shipment-db: { condition: service_healthy }
       kafka: { condition: service_started }
     ports:
-      - "127.0.0.1:8081:8081"
+      - "127.0.0.1:18081:8081"
 
   dock-scheduling-service:
     profiles: ["app"]
@@ -128,11 +142,13 @@ services:
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
       # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
+      # Traces go to the observability container (OpenTelemetry collector -> Tempo).
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://observability:4318/v1/traces
     depends_on:
       dock-db: { condition: service_healthy }
       kafka: { condition: service_started }
     ports:
-      - "127.0.0.1:8082:8082"
+      - "127.0.0.1:18082:8082"
 
   disruption-recovery-service:
     profiles: ["app"]
@@ -145,11 +161,13 @@ services:
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
       # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
+      # Traces go to the observability container (OpenTelemetry collector -> Tempo).
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://observability:4318/v1/traces
     depends_on:
       recovery-db: { condition: service_healthy }
       dock-scheduling-service: { condition: service_started }
     ports:
-      - "127.0.0.1:8083:8083"
+      - "127.0.0.1:18083:8083"
 
   ai-operations-service:
     profiles: ["app"]
@@ -162,11 +180,13 @@ services:
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
       # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
+      # Traces go to the observability container (OpenTelemetry collector -> Tempo).
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://observability:4318/v1/traces
     depends_on:
       - dock-scheduling-service
       - disruption-recovery-service
     ports:
-      - "127.0.0.1:8084:8084"
+      - "127.0.0.1:18084:8084"
 
   api-gateway:
     profiles: ["app"]
@@ -177,16 +197,20 @@ services:
       RECOVERY_SERVICE_URI: http://disruption-recovery-service:8083
       AI_SERVICE_URI: http://ai-operations-service:8084
       REDIS_HOST: redis
+      RATE_LIMIT_PER_SECOND: ${RATE_LIMIT_PER_SECOND:-20}
+      RATE_LIMIT_BURST: ${RATE_LIMIT_BURST:-40}
       OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:8180/realms/dockmind}
       # Tokens say they come from localhost:8180 (what the browser sees); keys are fetched over the Docker network.
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/dockmind/protocol/openid-connect/certs
+      # Traces go to the observability container (OpenTelemetry collector -> Tempo).
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://observability:4318/v1/traces
     depends_on:
       - redis
       - keycloak
       - shipment-service
       - dock-scheduling-service
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:18080:8080"
 
 volumes:
   shipment-db-data:

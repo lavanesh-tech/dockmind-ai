@@ -1,0 +1,13 @@
+# Grafana dashboard provisioning: the image's built-in dashboards plus DockMind's.
+apiVersion: 1
+providers:
+  - name: "DockMind"
+    type: file
+    options:
+      path: /otel-lgtm/dockmind-dashboard.json
+      foldersFromFilesStructure: false
+  - name: "JVM Metrics"
+    type: file
+    options:
+      path: /otel-lgtm/grafana-dashboard-jvm-metrics.json
+      foldersFromFilesStructure: false
